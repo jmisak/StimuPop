@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+*venv*/
+
+# Environment variables
+.env
+.env.local
+*.local
+
+# Build output
+dist/
+build/
+*.exe
+*.spec
+
+# Logs
+logs/
+*.log
+
+# IDE and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Claude temporary files
+.claude/
+tmpclaude-*/
+tmpclaude-*
+
+# Excel temporary/lock files
+~$*.xlsx
+~$*.xls
+~$*.docx
+
+# Archives (keep source, ignore built archives)
+*.tar.gz
+*.zip
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Test artifacts
+.pytest_cache/
+coverage.xml
+*.cover
+
+# Byte-compiled / optimized
+*.pyo
+*.pyd
+
+# Distribution / packaging
+*.manifest
+*.spec

@@ -1,0 +1,53 @@
+# StimuPop - Configuration
+# This file contains all configurable settings for the application.
+# Environment variables can override any setting using the format:
+# APP_SECTION_KEY (e.g., APP_IMAGES_MAX_SIZE_MB=20)
+
+app:
+  name: "StimuPop"
+  version: "2.1.0"
+  max_upload_size_mb: 200
+
+images:
+  # Maximum size per image in megabytes
+  max_size_mb: 10
+  # Allowed image formats (with leading dot)
+  allowed_formats:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".gif"
+    - ".webp"
+    - ".bmp"
+  # Cache time-to-live in seconds (1 hour)
+  cache_ttl_seconds: 3600
+
+presentation:
+  # Default slide orientation
+  default_orientation: "portrait"
+  # Portrait dimensions in inches
+  portrait_width_inches: 7.5
+  portrait_height_inches: 10.0
+  # Landscape dimensions in inches
+  landscape_width_inches: 10.0
+  landscape_height_inches: 7.5
+  # Default font size in points
+  default_font_size: 14
+  # Default image width in inches
+  default_img_width: 5.5
+  # Default image top position in inches
+  default_img_top: 0.5
+  # Default text top position in inches
+  default_text_top: 5.0
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  # Log file path (relative to app directory)
+  file: "logs/app.log"
+  # Maximum log file size in bytes (10MB)
+  max_bytes: 10485760
+  # Number of backup log files to keep
+  backup_count: 5
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
