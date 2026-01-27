@@ -1,3 +1,13 @@
+# Windows reserved filenames (NEVER create these - they break git)
+nul
+NUL
+con
+CON
+aux
+AUX
+prn
+PRN
+
 # Python
 __pycache__/
 *.py[cod]
@@ -23,9 +33,18 @@ env/
 
 # Build output
 dist/
+dist_v*/
 build/
+build_env/
 *.exe
 *.spec
+
+# Portable distributions
+StimuPop_Portable/
+StimuPop_Portable_Lite/
+StimuPop_NoPython/
+Stimupopv*/
+stimportv*/
 
 # Logs
 logs/
@@ -46,10 +65,12 @@ logs/
 tmpclaude-*/
 tmpclaude-*
 
-# Excel temporary/lock files
+# Excel/Office temporary/lock files
+~$*
 ~$*.xlsx
 ~$*.xls
 ~$*.docx
+~$*.pptx
 
 # Archives (keep source, ignore built archives)
 *.tar.gz
@@ -71,3 +92,11 @@ coverage.xml
 # Distribution / packaging
 *.manifest
 *.spec
+
+# Temp folders
+temp_images/
+temp/
+tmp/
+
+# Samples (user test data)
+Samples/

@@ -58,6 +58,11 @@ Be Concise: Do not re-print an entire 300-line file if only 5 lines changed. Use
 
 Selective Verbosity: Use "Medium Verbosity." Explain the strategy clearly, but keep the syntax documentation minimal unless the logic is non-obvious.
 
+6. Windows File System Guardrails
+CRITICAL: NEVER create files named after Windows reserved device names:
+- nul, NUL, con, CON, aux, AUX, prn, PRN, com1-9, lpt1-9
+These names are reserved by Windows and will break git operations. If you need to redirect output to nowhere, use a proper temp file or /dev/null equivalent, NOT a file named "nul".
+
 Implementation Tips for You:
 For Mermaid Charts: If you are using a CLI like Claude Code or Gemini, they will render the Mermaid code blocks as text. You can paste that text into the Mermaid Live Editor to see the visual, or use a VS Code extension that renders Mermaid in Markdown files.
 

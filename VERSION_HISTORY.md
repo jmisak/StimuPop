@@ -1,5 +1,150 @@
 # Version History
 
+## [2026-01-27] - v5.1.0: Template Mode & Rich Data Image Support
+
+### Summary
+Major feature release adding template-based slide generation and support for Excel 365 Rich Data images (pasted images). Slides now preserve exact template formatting and layout.
+
+### Features Added
+- **Template Placeholder Mode**: Clone template slides and populate with data
+  - Preserves exact font sizes, styles, and positioning from template
+  - Maps Excel columns to template paragraphs (C→P0, D→P1, E→P3, F→P5)
+  - Replaces image placeholder with actual product images
+- **Rich Data Image Extraction**: Support for Excel 365 pasted images
+  - Extracts images from `xl/richData/` structure
+  - Maps cell `vm` attributes to image files via relationship chain
+  - Works with images pasted directly into cells (shows as `#VALUE!`)
+- **Configurable Paragraph Spacing**: Control gap between text lines
+  - Default 0pt (no extra spacing)
+  - Slider range 0-24pt in UI
+
+### Technical Details
+
+#### New Components
+| Component | Description |
+|-----------|-------------|
+| `TEMPLATE_MODE_BLANK` | Constant for original blank slide generation |
+| `TEMPLATE_MODE_PLACEHOLDER` | Constant for template-based generation |
+| `SlideConfig.template_mode` | Selected generation mode |
+| `SlideConfig.paragraph_spacing` | Space after each paragraph (points) |
+| `SlideConfig.image_placeholder_name` | Name of image shape in template |
+| `SlideConfig.text_placeholder_name` | Name of text shape in template |
+| `_extract_template_info()` | Extracts shape data from template slide |
+| `_create_slide_from_template()` | Creates slide using template layout |
+| `_extract_rich_data_images()` | Extracts Excel 365 pasted images |
+
+#### Rich Data Image Extraction Flow
+```
+Excel File (xl/worksheets/sheet1.xml)
+  └── Cell B2: vm="1" (value metadata index)
+        │
+        ▼
+xl/richData/richValueRel.xml.rels
+  └── rId1 → ../media/image1.png
+        │
+        ▼
+xl/media/image1.png (extracted)
+```
+
+#### Template Mapping (Variety Card Format)
+| Template Paragraph | Excel Column | Font |
+|--------------------|--------------|------|
+| P0 | C (Brand) | Arial 24pt Bold |
+| P1 | D (Product Name) | Arial 24pt Bold |
+| P2 | *(spacer)* | - |
+| P3 | E (Size) | Arial 19pt |
+| P4 | *(spacer)* | - |
+| P5 | F (Summary) | Arial 16pt |
+
+#### UI Changes
+```
+Advanced Settings
+├── Template Mode (NEW)
+│   ├── Generation Mode dropdown (Blank/Placeholder)
+│   ├── Image Placeholder Name input
+│   └── Text Placeholder Name input
+├── Text Spacing (NEW)
+│   └── Paragraph Spacing slider (0-24pt)
+├── Image Sizing
+└── Column Formatting
+```
+
+### API Changes
+- `SlideConfig` accepts `template_mode`, `paragraph_spacing`, `image_placeholder_name`, `text_placeholder_name`
+- `ImageLoader.extract_embedded_images()` now falls back to Rich Data extraction
+- New exports: `TEMPLATE_MODE_BLANK`, `TEMPLATE_MODE_PLACEHOLDER`
+
+### Portable Distribution
+- `Stimupopv5.1_FINAL.zip` (507 MB) - Fully standalone executable
+
+---
+
+## [2026-01-13] - v2.3.0: Uniform Image Sizing & Portable Distribution
+
+### Summary
+Added uniform image sizing with multiple sizing modes, ensuring all images appear consistent across slides. Created portable distribution system for easy sharing with testers.
+
+### Features Added
+- **Image Size Modes**: Four modes for controlling image dimensions
+  - `Fit to Box` (default): Scale to fit within max width/height, preserve aspect ratio
+  - `Fit Width`: Fixed width, auto-calculated height
+  - `Fit Height`: Fixed height, auto-calculated width
+  - `Stretch`: Exact dimensions (may distort images)
+- **Max Height Control**: New slider for maximum image height
+- **Portable Distribution**: Self-contained ZIP with embedded Python
+- **User Guide**: Professional 12-page DOCX documentation
+- **README**: Comprehensive project documentation
+
+### Technical Details
+
+#### New Components
+| Component | Description |
+|-----------|-------------|
+| `IMG_SIZE_FIT_BOX` | Constant for fit-to-box sizing mode |
+| `IMG_SIZE_FIT_WIDTH` | Constant for fit-width sizing mode |
+| `IMG_SIZE_FIT_HEIGHT` | Constant for fit-height sizing mode |
+| `IMG_SIZE_STRETCH` | Constant for stretch sizing mode |
+| `SlideConfig.img_height` | Maximum image height in inches |
+| `SlideConfig.img_size_mode` | Selected sizing mode |
+| `_calculate_scaled_size()` | Calculates dimensions based on mode |
+| `_get_image_dimensions()` | Gets original image size via PIL |
+
+#### UI Changes
+```
+Advanced Settings
+├── Image Sizing (NEW)
+│   ├── Size Mode dropdown
+│   ├── Max Width slider
+│   ├── Max Height slider (NEW)
+│   └── Mode description info box
+├── Layout Position
+│   ├── Image Top Position
+│   ├── Text Top Position
+│   └── Slide Orientation
+└── Column Formatting
+```
+
+#### Distribution Files
+| File | Purpose |
+|------|---------|
+| `build_portable.bat` | Creates portable distribution |
+| `StimuPop.bat` | Launcher for end users |
+| `StimuPop_Portable.zip` | ~126MB distribution package |
+| `create_user_guide.py` | Generates DOCX documentation |
+
+### API Changes
+- `SlideConfig` now accepts `img_height` and `img_size_mode` parameters
+- New exports: `IMG_SIZE_FIT_BOX`, `IMG_SIZE_FIT_WIDTH`, `IMG_SIZE_FIT_HEIGHT`, `IMG_SIZE_STRETCH`
+
+### Configuration Changes
+```yaml
+presentation:
+  default_img_height: 4.0      # NEW
+  default_img_size_mode: "fit_box"  # NEW
+```
+
+---
+
 ## [2026-01-12] - v2.2.0: Per-Column Font Formatting
 
 ### Summary

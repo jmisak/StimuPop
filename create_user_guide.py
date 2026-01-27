@@ -183,7 +183,7 @@ def create_user_guide():
     set_cell_shading(version_cell, "E7F3FF")
     version_para = version_cell.paragraphs[0]
     version_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_run = version_para.add_run("Version 2.2.0")
+    version_run = version_para.add_run("Version 2.3.0")
     version_run.font.size = Pt(14)
     version_run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
 
@@ -225,6 +225,7 @@ def create_user_guide():
     features = [
         "Extracting embedded images from Excel cells",
         "Creating individual slides for each data row",
+        "Uniform image sizing with multiple sizing modes",
         "Formatting text with custom fonts, sizes, and colors",
         "Supporting both portrait and landscape orientations",
         "Handling errors gracefully (missing images won't stop the process)"
@@ -403,10 +404,46 @@ def create_user_guide():
 
     create_styled_heading(doc, "Advanced Settings", 2)
 
-    doc.add_paragraph("Click 'Advanced Settings' to access these options:")
+    doc.add_paragraph("Click 'Advanced Settings' to access layout and image sizing options:")
+
+    # Image Sizing subsection
+    create_styled_heading(doc, "Image Sizing (New in v2.3.0)", 3)
+
+    doc.add_paragraph("Control how images are sized uniformly across all slides:")
+
+    # Size modes table
+    size_modes_table = doc.add_table(rows=5, cols=2)
+    size_modes_table.style = 'Table Grid'
+
+    size_modes = [
+        ("Size Mode", "Description"),
+        ("Fit to Box (Recommended)", "Images scale to fit within Max Width and Max Height while maintaining aspect ratio. All images appear uniform."),
+        ("Fit Width Only", "Images have fixed width, height adjusts automatically based on aspect ratio."),
+        ("Fit Height Only", "Images have fixed height, width adjusts automatically based on aspect ratio."),
+        ("Stretch to Exact Size", "Images are forced to exact dimensions. May distort images."),
+    ]
+
+    for idx, (mode, desc) in enumerate(size_modes):
+        if idx == 0:
+            set_cell_shading(size_modes_table.cell(idx, 0), "2E74B5")
+            set_cell_shading(size_modes_table.cell(idx, 1), "2E74B5")
+            size_modes_table.cell(idx, 0).paragraphs[0].add_run(mode).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            size_modes_table.cell(idx, 1).paragraphs[0].add_run(desc).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            size_modes_table.cell(idx, 0).paragraphs[0].runs[0].bold = True
+            size_modes_table.cell(idx, 1).paragraphs[0].runs[0].bold = True
+        else:
+            size_modes_table.cell(idx, 0).paragraphs[0].add_run(mode).bold = True
+            size_modes_table.cell(idx, 1).paragraphs[0].add_run(desc)
+
+    doc.add_paragraph()
+    add_tip_box(doc, "Use 'Fit to Box' mode for product catalogs and photo albums where you want all images to appear the same size regardless of their original dimensions.")
+
+    # Layout settings
+    create_styled_heading(doc, "Layout Position Settings", 3)
 
     advanced_settings = [
-        ("Image Width", "Width of images on slides (3.0-7.0 inches)", "5.5 inches"),
+        ("Max Width", "Maximum image width (2.0-9.0 inches)", "5.5 inches"),
+        ("Max Height", "Maximum image height (2.0-7.0 inches)", "4.0 inches"),
         ("Image Top Position", "Distance from top of slide to image", "0.5 inches"),
         ("Text Top Position", "Distance from top of slide to text area", "5.0 inches"),
         ("Slide Orientation", "Portrait (tall) or Landscape (wide)", "Portrait"),
@@ -419,7 +456,7 @@ def create_user_guide():
 
     doc.add_paragraph()
 
-    create_styled_heading(doc, "Per-Column Formatting", 2)
+    create_styled_heading(doc, "Per-Column Formatting", 3)
 
     doc.add_paragraph("In Advanced Settings, you can customize each text column individually:")
 
@@ -466,6 +503,11 @@ def create_user_guide():
         ("Text formatting not applied",
          "• Ensure you configured formatting in Advanced Settings\n"
          "• Check that column letters in formatting match your data"),
+
+        ("Images are different sizes on slides",
+         "• Open Advanced Settings and set Size Mode to 'Fit to Box'\n"
+         "• Adjust Max Width and Max Height to your desired dimensions\n"
+         "• All images will now scale uniformly"),
     ]
 
     for issue, solution in issues:
@@ -552,7 +594,7 @@ def create_user_guide():
 
     version_final = doc.add_paragraph()
     version_final.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_final.add_run("Version 2.2.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    version_final.add_run("Version 2.3.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
     # Save document
     doc.save('StimuPop_User_Guide.docx')

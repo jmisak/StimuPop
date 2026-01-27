@@ -5,13 +5,15 @@ A production-grade web application that converts Excel data to
 PowerPoint presentations with embedded images and formatted text.
 
 Features:
+- Template-based placeholder population (NEW in v5.1)
+- Configurable paragraph spacing (NEW in v5.1)
 - Embedded Excel image extraction
 - Local file path image support
 - Configurable slide layout
 - Progress tracking
 - Comprehensive error handling
 
-Version: 2.2.0
+Version: 5.1.0 Tester
 """
 
 import tempfile
@@ -31,6 +33,12 @@ from src import (
     ImageLoader,
     ExcelValidationError,
     PPTXGenerationError,
+    IMG_SIZE_FIT_BOX,
+    IMG_SIZE_FIT_WIDTH,
+    IMG_SIZE_FIT_HEIGHT,
+    IMG_SIZE_STRETCH,
+    TEMPLATE_MODE_BLANK,
+    TEMPLATE_MODE_PLACEHOLDER,
 )
 from src.logging_config import setup_logging, request_context, get_logger
 from src.excel_handler import parse_column_input
@@ -42,7 +50,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop",
+    page_title="StimuPop v5.1 Tester",
     page_icon="🎯",
     layout="wide"
 )
@@ -57,8 +65,8 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop")
-    st.markdown("*Excel to PowerPoint with embedded images*")
+    st.title("🎯 StimuPop v5.1 Tester")
+    st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
     # Create two columns for layout
@@ -73,12 +81,18 @@ def render_app():
         img_column, text_columns, font_size = render_basic_config()
 
     # Advanced settings
-    img_width, img_top, text_top, orientation, column_formats = render_advanced_settings(text_columns, font_size)
+    (img_width, img_height, img_size_mode, img_top, text_top, orientation,
+     column_formats, paragraph_spacing, template_mode,
+     image_placeholder_name, text_placeholder_name) = render_advanced_settings(text_columns, font_size)
 
     st.markdown("---")
 
     # Preview Excel data
     df = render_data_preview(excel_file)
+
+    # Preview template if provided
+    if template_file and template_mode == TEMPLATE_MODE_PLACEHOLDER:
+        render_template_preview(template_file)
 
     st.markdown("---")
 
@@ -91,10 +105,16 @@ def render_app():
         text_columns=text_columns,
         font_size=font_size,
         img_width=img_width,
+        img_height=img_height,
+        img_size_mode=img_size_mode,
         img_top=img_top,
         text_top=text_top,
         orientation=orientation,
-        column_formats=column_formats
+        column_formats=column_formats,
+        paragraph_spacing=paragraph_spacing,
+        template_mode=template_mode,
+        image_placeholder_name=image_placeholder_name,
+        text_placeholder_name=text_placeholder_name
     )
 
     # Instructions
@@ -115,9 +135,9 @@ def render_file_uploaders():
     )
 
     template_file = st.file_uploader(
-        "Upload PowerPoint Template (optional)",
+        "Upload PowerPoint Template (.pptx)",
         type=['pptx'],
-        help="Upload a .pptx template for custom styling"
+        help="Upload a .pptx template with placeholders for images and text"
     )
 
     return excel_file, template_file
@@ -142,7 +162,7 @@ def render_basic_config():
         min_value=10,
         max_value=32,
         value=14,
-        help="Font size for text content"
+        help="Default font size for text content (used in Blank mode)"
     )
 
     return img_column, text_columns, font_size
@@ -152,20 +172,118 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
     """Render advanced settings in an expander."""
     column_formats = None
 
-    with st.expander("🔧 Advanced Settings"):
-        st.markdown("#### Layout")
+    # Define size mode options with display labels
+    size_mode_options = {
+        "Fit to Box (Recommended)": IMG_SIZE_FIT_BOX,
+        "Fit Width Only": IMG_SIZE_FIT_WIDTH,
+        "Fit Height Only": IMG_SIZE_FIT_HEIGHT,
+        "Stretch to Exact Size": IMG_SIZE_STRETCH,
+    }
+
+    # Template mode options
+    template_mode_options = {
+        "Blank Slides (Original)": TEMPLATE_MODE_BLANK,
+        "Template Placeholders (NEW)": TEMPLATE_MODE_PLACEHOLDER,
+    }
+
+    with st.expander("🔧 Advanced Settings", expanded=True):
+        # Template Mode Section (NEW)
+        st.markdown("#### 📋 Template Mode")
+        template_mode_label = st.selectbox(
+            "Generation Mode",
+            options=list(template_mode_options.keys()),
+            index=0,
+            help="Choose how slides are created"
+        )
+        template_mode = template_mode_options[template_mode_label]
+
+        # Placeholder names (only shown for template mode)
+        image_placeholder_name = "Rectangle 1"
+        text_placeholder_name = "TextBox"
+
+        if template_mode == TEMPLATE_MODE_PLACEHOLDER:
+            st.info("📋 **Template Mode**: Upload a template with placeholder shapes. The first slide will be used as the template.")
+
+            placeholder_col1, placeholder_col2 = st.columns(2)
+            with placeholder_col1:
+                image_placeholder_name = st.text_input(
+                    "Image Placeholder Name",
+                    "Rectangle 1",
+                    help="Name of the shape where images should be placed"
+                )
+            with placeholder_col2:
+                text_placeholder_name = st.text_input(
+                    "Text Placeholder Name",
+                    "TextBox",
+                    help="Name (or partial name) of the text box to populate"
+                )
+        else:
+            st.info("📄 **Blank Mode**: Creates new blank slides with images and text positioned automatically.")
+
+        st.markdown("---")
+
+        # Paragraph Spacing (NEW)
+        st.markdown("#### 📝 Text Spacing")
+        paragraph_spacing = st.slider(
+            "Paragraph Spacing (points)",
+            min_value=0.0,
+            max_value=24.0,
+            value=0.0,
+            step=1.0,
+            help="Space after each text paragraph (0 = no extra spacing between columns)"
+        )
+
+        st.markdown("---")
+
+        # Image Sizing Section
+        st.markdown("#### 🖼️ Image Sizing")
+        st.caption("Control how images are sized on each slide (Blank mode only)")
+
+        size_col1, size_col2 = st.columns(2)
+
+        with size_col1:
+            size_mode_label = st.selectbox(
+                "Size Mode",
+                options=list(size_mode_options.keys()),
+                index=0,
+                help="How to handle different image sizes"
+            )
+            img_size_mode = size_mode_options[size_mode_label]
+
+            img_width = st.slider(
+                "Max Width (inches)",
+                min_value=2.0,
+                max_value=9.0,
+                value=5.5,
+                step=0.25,
+                help="Maximum image width (or exact width depending on mode)"
+            )
+
+        with size_col2:
+            img_height = st.slider(
+                "Max Height (inches)",
+                min_value=2.0,
+                max_value=7.0,
+                value=4.0,
+                step=0.25,
+                help="Maximum image height (used in Fit to Box and Stretch modes)"
+            )
+
+            # Show info about current mode
+            if img_size_mode == IMG_SIZE_FIT_BOX:
+                st.info("Images will fit within the box while maintaining aspect ratio")
+            elif img_size_mode == IMG_SIZE_FIT_WIDTH:
+                st.info("Images will have fixed width, height adjusts automatically")
+            elif img_size_mode == IMG_SIZE_FIT_HEIGHT:
+                st.info("Images will have fixed height, width adjusts automatically")
+            else:
+                st.warning("Images will be stretched to exact size (may distort)")
+
+        st.markdown("---")
+        st.markdown("#### 📍 Layout Position (Blank mode)")
         adv_col1, adv_col2 = st.columns(2)
 
         with adv_col1:
-            img_width = st.slider(
-                "Image Width (inches)",
-                min_value=3.0,
-                max_value=7.0,
-                value=5.5,
-                step=0.5,
-                help="Width of the image on each slide"
-            )
-
             img_top = st.slider(
                 "Image Top Position (inches)",
                 min_value=0.0,
@@ -179,7 +297,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
             text_top = st.slider(
                 "Text Top Position (inches)",
                 min_value=3.0,
-                max_value=7.0,
+                max_value=8.0,
                 value=5.0,
                 step=0.5,
                 help="Distance from top of slide to text"
@@ -192,12 +310,15 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
                 help="Portrait (tall) or Landscape (wide) slides"
             )
 
-        # Per-column formatting section
-        st.markdown("---")
-        st.markdown("#### Column Formatting")
-        column_formats = render_column_format_config(text_columns_str, default_font_size)
+        # Per-column formatting section (Blank mode only)
+        if template_mode == TEMPLATE_MODE_BLANK:
+            st.markdown("---")
+            st.markdown("#### 🎨 Column Formatting (Blank mode)")
+            column_formats = render_column_format_config(text_columns_str, default_font_size)
 
-    return img_width, img_top, text_top, orientation, column_formats
+    return (img_width, img_height, img_size_mode, img_top, text_top, orientation,
+            column_formats, paragraph_spacing, template_mode,
+            image_placeholder_name, text_placeholder_name)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -305,6 +426,41 @@ def render_data_preview(excel_file):
         return None
 
 
+def render_template_preview(template_file):
+    """Preview template structure."""
+    st.subheader("📋 Template Preview")
+
+    try:
+        from pptx import Presentation
+        prs = Presentation(BytesIO(template_file.getvalue()))
+
+        st.write(f"**Slide dimensions:** {prs.slide_width.inches:.2f}\" × {prs.slide_height.inches:.2f}\"")
+        st.write(f"**Slides in template:** {len(prs.slides)}")
+
+        if len(prs.slides) > 0:
+            slide = prs.slides[0]
+            st.write(f"**Shapes in first slide:** {len(slide.shapes)}")
+
+            # Show shape details
+            shape_info = []
+            for shape in slide.shapes:
+                info = {
+                    "Name": shape.name,
+                    "Type": str(shape.shape_type).split(".")[-1],
+                    "Position": f"{shape.left.inches:.2f}\", {shape.top.inches:.2f}\"",
+                    "Size": f"{shape.width.inches:.2f}\" × {shape.height.inches:.2f}\""
+                }
+                if shape.has_text_frame:
+                    info["Has Text"] = "Yes"
+                shape_info.append(info)
+
+            if shape_info:
+                st.dataframe(pd.DataFrame(shape_info), use_container_width=True)
+
+    except Exception as e:
+        st.warning(f"Could not preview template: {e}")
+
+
 def render_generate_section(
     excel_file,
     template_file,
@@ -313,10 +469,16 @@ def render_generate_section(
     text_columns,
     font_size,
     img_width,
+    img_height,
+    img_size_mode,
     img_top,
     text_top,
     orientation,
-    column_formats
+    column_formats,
+    paragraph_spacing,
+    template_mode,
+    image_placeholder_name,
+    text_placeholder_name
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -328,6 +490,10 @@ def render_generate_section(
             st.error("❌ Excel file appears to be empty or invalid!")
             return
 
+        if template_mode == TEMPLATE_MODE_PLACEHOLDER and not template_file:
+            st.error("❌ Template mode requires a PowerPoint template file!")
+            return
+
         generate_presentation(
             df=df,
             excel_file=excel_file,
@@ -336,10 +502,16 @@ def render_generate_section(
             text_columns=text_columns,
             font_size=font_size,
             img_width=img_width,
+            img_height=img_height,
+            img_size_mode=img_size_mode,
             img_top=img_top,
             text_top=text_top,
             orientation=orientation,
-            column_formats=column_formats
+            column_formats=column_formats,
+            paragraph_spacing=paragraph_spacing,
+            template_mode=template_mode,
+            image_placeholder_name=image_placeholder_name,
+            text_placeholder_name=text_placeholder_name
         )
 
 
@@ -351,13 +523,19 @@ def generate_presentation(
     text_columns,
     font_size,
     img_width,
+    img_height,
+    img_size_mode,
     img_top,
     text_top,
     orientation,
-    column_formats
+    column_formats,
+    paragraph_spacing,
+    template_mode,
+    image_placeholder_name,
+    text_placeholder_name
 ):
     """Generate the PowerPoint presentation."""
-    logger.info(f"Starting presentation generation for {excel_file.name}")
+    logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
 
     try:
         # Parse and validate columns
@@ -394,11 +572,17 @@ def generate_presentation(
             img_column=resolved_img,
             text_columns=resolved_text,
             img_width=img_width,
+            img_height=img_height,
+            img_size_mode=img_size_mode,
             img_top=img_top,
             text_top=text_top,
             font_size=font_size,
             orientation=orientation,
-            column_formats=column_formats
+            column_formats=column_formats,
+            paragraph_spacing=paragraph_spacing,
+            template_mode=template_mode,
+            image_placeholder_name=image_placeholder_name,
+            text_placeholder_name=text_placeholder_name
         )
 
         # Get template bytes if provided
@@ -427,9 +611,10 @@ def generate_presentation(
             return
 
         # Show results summary
+        mode_label = "Template" if template_mode == TEMPLATE_MODE_PLACEHOLDER else "Blank"
         if result.slides_with_errors > 0:
             st.warning(
-                f"⚠️ Generated {result.slides_generated} slides, "
+                f"⚠️ Generated {result.slides_generated} slides ({mode_label} mode), "
                 f"but {result.slides_with_errors} had issues (images may be missing)"
             )
 
@@ -440,7 +625,7 @@ def generate_presentation(
                         st.caption(f"Slide {sr.index + 1}: {sr.image_error}")
         else:
             st.success(
-                f"✅ Generated {result.slides_generated} slides "
+                f"✅ Generated {result.slides_generated} slides ({mode_label} mode) "
                 f"with {result.slides_with_images} images"
             )
 
@@ -479,6 +664,20 @@ def render_instructions():
         st.markdown("""
 ### Instructions
 
+#### Template Mode (NEW in v5.1)
+
+1. **Prepare your template:**
+   - Create a PowerPoint slide with placeholder shapes
+   - Name the image placeholder (e.g., "Rectangle 1")
+   - Name the text placeholder (e.g., "TextBox 55")
+   - The first slide will be cloned for each row
+
+2. **Configure placeholders:**
+   - Enter the exact shape names in Advanced Settings
+   - Text will populate preserving the template's formatting
+
+#### Blank Mode (Original)
+
 1. **Prepare your Excel file:**
    - Each row becomes one slide
    - Include images embedded in a column (e.g., column B) or file paths to local images
@@ -491,7 +690,7 @@ def render_instructions():
 3. **Configure settings:**
    - Specify which column contains images
    - Specify which columns contain text
-   - Adjust font size and positioning as needed
+   - Adjust font size, spacing, and positioning as needed
 
 4. **Generate:**
    - Click "Generate Presentation"
@@ -503,20 +702,14 @@ You can reference columns by:
 - **Letter**: A, B, C, ... (Excel-style)
 - **Name**: The actual column header name
 
-### Example Excel Structure
-
-| A (Skip) | B (Image) | C (Title) | D (Description) |
-|----------|-----------|-----------|-----------------|
-| Row 1    | [embedded]| Title 1   | Description 1   |
-| Row 2    | [embedded]| Title 2   | Description 2   |
-
 ### Tips
 
+- **Template mode** preserves your slide design and formatting
+- **Paragraph spacing = 0** removes gaps between text lines
 - Embed images directly in Excel cells for best results
 - Or use local file paths (e.g., `C:\\Images\\photo.jpg`)
 - Images are automatically centered and sized
 - Missing images are skipped (slide still created)
-- Text is centered below images
         """)
 
 
@@ -525,7 +718,8 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v2.2.0 | "
+        "🎯 StimuPop v5.1.0 Tester | "
+        "Template Mode + Configurable Spacing | "
         "Built with Streamlit"
         "</p>",
         unsafe_allow_html=True

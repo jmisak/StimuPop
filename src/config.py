@@ -38,6 +38,8 @@ DEFAULTS: Dict[str, Any] = {
         "landscape_height_inches": 7.5,
         "default_font_size": 14,
         "default_img_width": 5.5,
+        "default_img_height": 4.0,
+        "default_img_size_mode": "fit_box",
         "default_img_top": 0.5,
         "default_text_top": 5.0,
     },
@@ -74,6 +76,8 @@ class PresentationConfig:
     landscape_height_inches: float = 7.5
     default_font_size: int = 14
     default_img_width: float = 5.5
+    default_img_height: float = 4.0
+    default_img_size_mode: str = "fit_box"
     default_img_top: float = 0.5
     default_text_top: float = 5.0
 

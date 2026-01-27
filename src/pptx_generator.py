@@ -1,8 +1,10 @@
 """
-PowerPoint generation for StimuPop.
+PowerPoint generation for StimuPop v5.1.
 
 Provides presentation creation with:
-- Template support
+- Template-based generation (NEW)
+- Placeholder detection and population (NEW)
+- Configurable paragraph spacing (NEW)
 - Embedded image support
 - Local file path support
 - Configurable layout
@@ -10,14 +12,17 @@ Provides presentation creation with:
 - Error handling per slide
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
+from copy import deepcopy
 
+from PIL import Image
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Emu
 from pptx.enum.text import PP_ALIGN
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.dml.color import RGBColor
 
 from .config import get_config
@@ -56,6 +61,17 @@ class ColumnFormat:
         return RGBColor(r, g, b)
 
 
+# Image sizing modes
+IMG_SIZE_FIT_BOX = "fit_box"      # Fit within width AND height, maintain aspect ratio
+IMG_SIZE_FIT_WIDTH = "fit_width"  # Fixed width, auto height (original behavior)
+IMG_SIZE_FIT_HEIGHT = "fit_height"  # Fixed height, auto width
+IMG_SIZE_STRETCH = "stretch"      # Exact size, may distort
+
+# Template modes
+TEMPLATE_MODE_BLANK = "blank"      # Create blank slides (original behavior)
+TEMPLATE_MODE_PLACEHOLDER = "placeholder"  # Use template placeholders
+
+
 @dataclass
 class SlideConfig:
     """
@@ -64,21 +80,34 @@ class SlideConfig:
     Attributes:
         img_column: Column containing images (embedded or file paths)
         text_columns: Columns containing text content
-        img_width: Image width in inches
+        img_width: Image width in inches (max width for fit_box mode)
+        img_height: Image height in inches (max height for fit_box mode)
+        img_size_mode: How to size images (fit_box, fit_width, fit_height, stretch)
         img_top: Image top position in inches
         text_top: Text top position in inches
         font_size: Font size in points (fallback default)
         orientation: 'portrait' or 'landscape'
         column_formats: Per-column font formatting
+        paragraph_spacing: Space after each paragraph in points (NEW)
+        template_mode: 'blank' or 'placeholder' (NEW)
+        image_placeholder_name: Name of image placeholder shape (NEW)
+        text_placeholder_name: Name of text placeholder shape (NEW)
     """
     img_column: str
     text_columns: List[str]
     img_width: float = 5.5
+    img_height: float = 4.0
+    img_size_mode: str = IMG_SIZE_FIT_BOX
     img_top: float = 0.5
     text_top: float = 5.0
     font_size: int = 14
     orientation: str = "portrait"
     column_formats: Optional[Dict[str, ColumnFormat]] = None
+    # NEW in v5.1
+    paragraph_spacing: float = 0.0  # Points - 0 means no extra spacing
+    template_mode: str = TEMPLATE_MODE_BLANK
+    image_placeholder_name: str = "Rectangle 1"  # Default from Variety Card
+    text_placeholder_name: str = "TextBox"  # Will match any TextBox
 
     def get_column_format(self, column: str) -> ColumnFormat:
         """Get format for column, falling back to defaults."""
@@ -119,22 +148,13 @@ class PPTXGenerator:
     Generates PowerPoint presentations from slide data.
 
     Features:
-    - Template support
+    - Template-based generation with placeholder support (NEW)
+    - Configurable paragraph spacing (NEW)
     - Embedded Excel images
     - Local file path images
     - Configurable slide layout
     - Progress callbacks
     - Per-slide error handling (continues on error)
-
-    Usage:
-        generator = PPTXGenerator(config)
-        result = generator.generate(
-            slide_data,
-            embedded_images=embedded_dict,
-            progress_callback=my_callback
-        )
-        if result.success:
-            result.presentation.save("output.pptx")
     """
 
     def __init__(
@@ -142,13 +162,7 @@ class PPTXGenerator:
         config: Optional[SlideConfig] = None,
         image_loader: Optional[ImageLoader] = None
     ):
-        """
-        Initialize generator.
-
-        Args:
-            config: Slide configuration
-            image_loader: Image loader instance
-        """
+        """Initialize generator."""
         app_config = get_config()
         pres_config = app_config.presentation
 
@@ -166,6 +180,7 @@ class PPTXGenerator:
         self.config = config
         self.loader = image_loader or ImageLoader()
         self.app_config = app_config
+        self._template_shapes = None  # Cache template shape data
 
     def generate(
         self,
@@ -174,18 +189,7 @@ class PPTXGenerator:
         template_file: Optional[Union[bytes, BytesIO, str, Path]] = None,
         progress_callback: Optional[Callable[[str, int, int], None]] = None
     ) -> GenerationResult:
-        """
-        Generate a PowerPoint presentation.
-
-        Args:
-            slide_data: List of dicts with 'image_source' and 'text_content' keys
-            embedded_images: Dict of embedded images keyed by cell reference
-            template_file: Optional template file (bytes, BytesIO, or path)
-            progress_callback: Optional callback(status, current, total)
-
-        Returns:
-            GenerationResult with presentation and statistics
-        """
+        """Generate a PowerPoint presentation."""
         if not slide_data:
             return GenerationResult(
                 success=False,
@@ -196,7 +200,7 @@ class PPTXGenerator:
 
         try:
             # Create or load presentation
-            prs = self._create_presentation(template_file)
+            prs, template_info = self._create_presentation(template_file)
 
             total_slides = len(slide_data)
 
@@ -216,13 +220,22 @@ class PPTXGenerator:
                         total_slides
                     )
 
-                result = self._create_slide(prs, data, embedded_images)
+                # Choose generation method based on template mode
+                if self.config.template_mode == TEMPLATE_MODE_PLACEHOLDER and template_info:
+                    result = self._create_slide_from_template(prs, data, embedded_images, template_info)
+                else:
+                    result = self._create_slide(prs, data, embedded_images)
+
                 slide_results.append(result)
 
                 if result.has_image:
                     slides_with_images += 1
                 if result.image_error or result.error:
                     slides_with_errors += 1
+
+            # Remove the template slide if we used placeholder mode
+            if self.config.template_mode == TEMPLATE_MODE_PLACEHOLDER and template_info:
+                self._remove_slide(prs, 0)
 
             logger.info(
                 f"Generated presentation: {total_slides} slides, "
@@ -249,16 +262,23 @@ class PPTXGenerator:
     def _create_presentation(
         self,
         template_file: Optional[Union[bytes, BytesIO, str, Path]]
-    ) -> Presentation:
-        """Create or load a presentation."""
+    ) -> Tuple[Presentation, Optional[dict]]:
+        """Create or load a presentation. Returns (presentation, template_info)."""
         pres_config = self.app_config.presentation
+        template_info = None
 
         if template_file:
             try:
                 if isinstance(template_file, bytes):
                     template_file = BytesIO(template_file)
                 prs = Presentation(template_file)
-                logger.info("Loaded presentation template")
+
+                # If using placeholder mode, extract template info
+                if self.config.template_mode == TEMPLATE_MODE_PLACEHOLDER and len(prs.slides) > 0:
+                    template_info = self._extract_template_info(prs.slides[0])
+                    logger.info(f"Extracted template info: {len(template_info.get('shapes', []))} shapes")
+
+                logger.info(f"Loaded template: {prs.slide_width.inches:.2f}x{prs.slide_height.inches:.2f} inches")
             except Exception as e:
                 raise PPTXGenerationError(
                     f"Cannot load template: {e}",
@@ -280,7 +300,309 @@ class PPTXGenerator:
                 f"{prs.slide_width.inches}x{prs.slide_height.inches} inches"
             )
 
-        return prs
+        return prs, template_info
+
+    def _extract_template_info(self, template_slide) -> dict:
+        """Extract shape information from template slide."""
+        info = {
+            'shapes': [],
+            'image_shape': None,
+            'text_shape': None
+        }
+
+        for shape in template_slide.shapes:
+            shape_data = {
+                'name': shape.name,
+                'type': shape.shape_type,
+                'left': shape.left,
+                'top': shape.top,
+                'width': shape.width,
+                'height': shape.height,
+                'paragraphs': []
+            }
+
+            # Extract text frame info
+            if shape.has_text_frame:
+                for para in shape.text_frame.paragraphs:
+                    para_data = {
+                        'text': para.text,
+                        'alignment': para.alignment,
+                        'level': para.level,
+                        'runs': []
+                    }
+                    for run in para.runs:
+                        run_data = {
+                            'text': run.text,
+                            'font_name': run.font.name,
+                            'font_size': run.font.size,
+                            'bold': run.font.bold,
+                            'italic': run.font.italic,
+                        }
+                        try:
+                            run_data['color'] = run.font.color.rgb
+                        except:
+                            run_data['color'] = None
+                        para_data['runs'].append(run_data)
+                    shape_data['paragraphs'].append(para_data)
+
+            info['shapes'].append(shape_data)
+
+            # Identify special shapes
+            if self.config.image_placeholder_name.lower() in shape.name.lower():
+                info['image_shape'] = shape_data
+            elif self.config.text_placeholder_name.lower() in shape.name.lower():
+                info['text_shape'] = shape_data
+
+        return info
+
+    def _remove_slide(self, prs: Presentation, slide_idx: int) -> None:
+        """Remove a slide by index."""
+        try:
+            slide_id = prs.slides._sldIdLst[slide_idx].rId
+            prs.part.drop_rel(slide_id)
+            del prs.slides._sldIdLst[slide_idx]
+            logger.info(f"Removed slide at index {slide_idx}")
+        except Exception as e:
+            logger.warning(f"Could not remove slide: {e}")
+
+    def _create_slide_from_template(
+        self,
+        prs: Presentation,
+        data: dict,
+        embedded_images: Dict[str, ImageResult],
+        template_info: dict
+    ) -> SlideResult:
+        """Create a slide by recreating template shapes and populating with data."""
+        index = data.get("row_index", len(prs.slides))
+        result = SlideResult(index=index, success=True)
+
+        try:
+            # Use blank layout to avoid unwanted placeholder shapes
+            blank_layout = None
+            for layout in prs.slide_layouts:
+                if layout.name == "Blank" or "blank" in layout.name.lower():
+                    blank_layout = layout
+                    break
+            if blank_layout is None:
+                blank_layout = prs.slide_layouts[-1]  # Use last layout as fallback
+
+            new_slide = prs.slides.add_slide(blank_layout)
+
+            # Get data for this slide
+            text_content = data.get("text_content", [])
+            image_source = data.get("image_source")
+            image_cell = data.get("image_cell")
+
+            # Get image if available
+            img_result = None
+            if image_cell and image_cell in embedded_images:
+                img_result = embedded_images[image_cell]
+            elif image_source and not image_source.startswith("http"):
+                img_result = self.loader.load_from_path(image_source)
+
+            # Recreate shapes from template
+            for shape_data in template_info['shapes']:
+                shape_name = shape_data['name']
+
+                # Handle image placeholder
+                if template_info['image_shape'] and shape_name == template_info['image_shape']['name']:
+                    if img_result and img_result.success:
+                        try:
+                            self._add_image_at_position(
+                                new_slide, prs, img_result,
+                                shape_data['left'], shape_data['top'],
+                                shape_data['width'], shape_data['height']
+                            )
+                            result.has_image = True
+                        except Exception as e:
+                            result.image_error = str(e)
+                            # Add placeholder rectangle if image fails
+                            self._add_placeholder_shape(new_slide, shape_data, "No Image")
+                    else:
+                        # No image available - add empty placeholder
+                        if img_result and img_result.error:
+                            result.image_error = img_result.error
+                        self._add_placeholder_shape(new_slide, shape_data, "No Image")
+
+                # Handle text placeholder
+                elif template_info['text_shape'] and shape_name == template_info['text_shape']['name']:
+                    try:
+                        self._add_text_from_template(new_slide, shape_data, text_content)
+                        result.text_added = True
+                    except Exception as e:
+                        result.error = f"Text failed: {e}"
+
+                # Copy other shapes as-is (backgrounds, decorations, etc.)
+                else:
+                    self._recreate_shape(new_slide, shape_data)
+
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+            logger.error(f"Slide {index}: Creation failed: {e}", exc_info=True)
+
+        return result
+
+    def _add_placeholder_shape(self, slide, shape_data: dict, text: str) -> None:
+        """Add a placeholder rectangle shape."""
+        if shape_data['type'] == MSO_SHAPE_TYPE.AUTO_SHAPE:
+            from pptx.enum.shapes import MSO_SHAPE
+            shape = slide.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE,
+                shape_data['left'], shape_data['top'],
+                shape_data['width'], shape_data['height']
+            )
+            shape.name = shape_data['name']
+            if shape.has_text_frame:
+                shape.text_frame.paragraphs[0].text = text
+                shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+    def _add_image_at_position(
+        self,
+        slide,
+        prs: Presentation,
+        img_result: ImageResult,
+        left, top, max_width, max_height
+    ) -> None:
+        """Add image at specified position, scaled to fit."""
+        img_result.data.seek(0)
+        orig_width, orig_height = self._get_image_dimensions(img_result.data)
+        img_result.data.seek(0)
+
+        # Calculate scaled size to fit within bounds
+        final_width, final_height = self._calculate_scaled_size(
+            orig_width, orig_height,
+            max_width.inches, max_height.inches,
+            IMG_SIZE_FIT_BOX
+        )
+
+        # Center within the placeholder bounds
+        img_left = left + Emu((max_width.emu - Inches(final_width).emu) // 2)
+        img_top = top + Emu((max_height.emu - Inches(final_height).emu) // 2)
+
+        slide.shapes.add_picture(
+            img_result.data,
+            img_left, img_top,
+            Inches(final_width), Inches(final_height)
+        )
+
+    def _add_text_from_template(
+        self,
+        slide,
+        shape_data: dict,
+        text_content: List[Union[str, dict]]
+    ) -> None:
+        """Add text box following template formatting, populated with data."""
+        textbox = slide.shapes.add_textbox(
+            shape_data['left'], shape_data['top'],
+            shape_data['width'], shape_data['height']
+        )
+        textbox.name = shape_data['name']
+
+        tf = textbox.text_frame
+        tf.word_wrap = True
+
+        template_paragraphs = shape_data['paragraphs']
+
+        # Build content mapping: template paragraph -> data
+        # Template has: P0=ColC, P1=ColD, P2=empty, P3=ColE, P4=empty, P5=ColF
+        # Data has: [{"column":"C","text":"..."}, {"column":"D","text":"..."}, ...]
+
+        # Create a map of column letter to text
+        content_map = {}
+        for item in text_content:
+            if isinstance(item, dict):
+                col = item.get("column", "")
+                text = item.get("text", "")
+                content_map[col] = text
+            else:
+                # Legacy format - just use index
+                pass
+
+        # Map template paragraphs to columns
+        # Based on Variety Card: P0->C, P1->D, P2->empty, P3->E, P4->empty, P5->F
+        column_sequence = ["C", "D", "", "E", "", "F"]
+
+        for i, para_data in enumerate(template_paragraphs):
+            if i == 0:
+                p = tf.paragraphs[0]
+            else:
+                p = tf.add_paragraph()
+
+            # Determine what text to use
+            if i < len(column_sequence):
+                col_letter = column_sequence[i]
+                if col_letter and col_letter in content_map:
+                    new_text = content_map[col_letter]
+                elif col_letter == "":
+                    new_text = ""  # Keep empty paragraphs as spacers
+                else:
+                    new_text = ""  # No data for this column
+            else:
+                new_text = ""
+
+            # Set alignment from template
+            if para_data.get('alignment'):
+                p.alignment = para_data['alignment']
+            else:
+                p.alignment = PP_ALIGN.CENTER
+
+            # Add run with template formatting
+            if para_data['runs']:
+                run_data = para_data['runs'][0]  # Use first run's formatting
+                run = p.add_run()
+                run.text = new_text
+
+                # Apply template formatting
+                if run_data.get('font_name'):
+                    run.font.name = run_data['font_name']
+                if run_data.get('font_size'):
+                    run.font.size = run_data['font_size']
+                if run_data.get('bold') is not None:
+                    run.font.bold = run_data['bold']
+                if run_data.get('italic') is not None:
+                    run.font.italic = run_data['italic']
+                if run_data.get('color'):
+                    run.font.color.rgb = run_data['color']
+            else:
+                # No template run formatting - just add text
+                run = p.add_run()
+                run.text = new_text
+
+            # Apply configurable spacing
+            p.space_after = Pt(self.config.paragraph_spacing)
+
+    def _recreate_shape(self, slide, shape_data: dict) -> None:
+        """Recreate a shape from template data (for backgrounds, etc.)."""
+        # Only handle text boxes for now - skip complex shapes
+        if shape_data['type'] == MSO_SHAPE_TYPE.TEXT_BOX:
+            textbox = slide.shapes.add_textbox(
+                shape_data['left'], shape_data['top'],
+                shape_data['width'], shape_data['height']
+            )
+            textbox.name = shape_data['name']
+
+            tf = textbox.text_frame
+            tf.word_wrap = True
+
+            for i, para_data in enumerate(shape_data['paragraphs']):
+                if i == 0:
+                    p = tf.paragraphs[0]
+                else:
+                    p = tf.add_paragraph()
+
+                if para_data.get('alignment'):
+                    p.alignment = para_data['alignment']
+
+                for run_data in para_data['runs']:
+                    run = p.add_run()
+                    run.text = run_data['text']
+                    if run_data.get('font_name'):
+                        run.font.name = run_data['font_name']
+                    if run_data.get('font_size'):
+                        run.font.size = run_data['font_size']
+                    if run_data.get('bold') is not None:
+                        run.font.bold = run_data['bold']
 
     def _create_slide(
         self,
@@ -288,7 +610,7 @@ class PPTXGenerator:
         data: dict,
         embedded_images: Dict[str, ImageResult]
     ) -> SlideResult:
-        """Create a single slide."""
+        """Create a single slide (original blank slide method)."""
         index = data.get("row_index", len(prs.slides))
         result = SlideResult(index=index, success=True)
 
@@ -299,19 +621,15 @@ class PPTXGenerator:
 
             # Handle image
             image_source = data.get("image_source")
-            image_cell = data.get("image_cell")  # Cell reference for embedded image
+            image_cell = data.get("image_cell")
 
             img_result = None
 
-            # Check for embedded image first (by cell reference)
             if image_cell and image_cell in embedded_images:
                 img_result = embedded_images[image_cell]
-
-            # Check for file path
             elif image_source and not image_source.startswith("http"):
                 img_result = self.loader.load_from_path(image_source)
 
-            # Add image if we have one
             if img_result:
                 if img_result.success:
                     try:
@@ -341,25 +659,63 @@ class PPTXGenerator:
 
         return result
 
+    def _get_image_dimensions(self, img_data: BytesIO) -> Tuple[int, int]:
+        """Get image dimensions in pixels."""
+        img_data.seek(0)
+        with Image.open(img_data) as img:
+            return img.size
+
+    def _calculate_scaled_size(
+        self,
+        orig_width: int,
+        orig_height: int,
+        max_width: float,
+        max_height: float,
+        mode: str
+    ) -> Tuple[float, float]:
+        """Calculate scaled image dimensions based on sizing mode."""
+        aspect_ratio = orig_width / orig_height if orig_height > 0 else 1.0
+
+        if mode == IMG_SIZE_STRETCH:
+            return max_width, max_height
+        elif mode == IMG_SIZE_FIT_WIDTH:
+            return max_width, max_width / aspect_ratio
+        elif mode == IMG_SIZE_FIT_HEIGHT:
+            return max_height * aspect_ratio, max_height
+        else:  # IMG_SIZE_FIT_BOX
+            width_if_fit_height = max_height * aspect_ratio
+            height_if_fit_width = max_width / aspect_ratio
+
+            if width_if_fit_height <= max_width:
+                return width_if_fit_height, max_height
+            else:
+                return max_width, height_if_fit_width
+
     def _add_image(
         self,
         slide,
         prs: Presentation,
         img_result: ImageResult
     ) -> None:
-        """Add image to slide."""
-        # Reset BytesIO position
+        """Add image to slide with configurable sizing."""
+        img_result.data.seek(0)
+        orig_width, orig_height = self._get_image_dimensions(img_result.data)
         img_result.data.seek(0)
 
-        # Add picture with specified width, let height auto-scale
-        pic = slide.shapes.add_picture(
-            img_result.data,
-            Inches(1),  # Temporary left position
-            Inches(self.config.img_top),
-            width=Inches(self.config.img_width)
+        final_width, final_height = self._calculate_scaled_size(
+            orig_width, orig_height,
+            self.config.img_width, self.config.img_height,
+            self.config.img_size_mode
         )
 
-        # Center horizontally
+        pic = slide.shapes.add_picture(
+            img_result.data,
+            Inches(1),
+            Inches(self.config.img_top),
+            width=Inches(final_width),
+            height=Inches(final_height)
+        )
+
         pic.left = int((prs.slide_width - pic.width) / 2)
 
     def _add_text(
@@ -368,8 +724,7 @@ class PPTXGenerator:
         prs: Presentation,
         text_content: List[Union[str, dict]]
     ) -> None:
-        """Add text content to slide with per-column formatting."""
-        # Calculate text box dimensions
+        """Add text content to slide with per-column formatting and configurable spacing."""
         text_height = prs.slide_height.inches - self.config.text_top - 0.5
 
         textbox = slide.shapes.add_textbox(
@@ -383,7 +738,6 @@ class PPTXGenerator:
         text_frame.word_wrap = True
 
         for i, item in enumerate(text_content):
-            # Handle both dict (new format) and string (backward compat)
             if isinstance(item, dict):
                 text = item.get("text", "")
                 col_format = self.config.get_column_format(item.get("column", ""))
@@ -396,11 +750,9 @@ class PPTXGenerator:
             else:
                 p = text_frame.add_paragraph()
 
-            # Use run for more control over formatting
             run = p.add_run()
             run.text = text
 
-            # Apply per-column formatting
             font = run.font
             font.size = Pt(col_format.font_size)
             font.bold = col_format.bold
@@ -409,7 +761,7 @@ class PPTXGenerator:
             font.color.rgb = col_format.get_rgb_color()
 
             p.alignment = PP_ALIGN.CENTER
-            p.space_after = Pt(12)
+            p.space_after = Pt(self.config.paragraph_spacing)
 
 
 def create_presentation(
@@ -419,18 +771,6 @@ def create_presentation(
     template_file: Optional[Union[bytes, BytesIO, str, Path]] = None,
     progress_callback: Optional[Callable[[str, int, int], None]] = None
 ) -> GenerationResult:
-    """
-    Convenience function to create a presentation.
-
-    Args:
-        slide_data: List of dicts with 'image_source' and 'text_content' keys
-        config: Optional slide configuration
-        embedded_images: Dict of embedded images
-        template_file: Optional template file
-        progress_callback: Optional progress callback
-
-    Returns:
-        GenerationResult
-    """
+    """Convenience function to create a presentation."""
     generator = PPTXGenerator(config)
     return generator.generate(slide_data, embedded_images, template_file, progress_callback)

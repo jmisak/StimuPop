@@ -1,7 +1,9 @@
 # Project Memory
 
 ## Project Overview
-Excel to PowerPoint Converter - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text.
+Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
+
+**Current Version:** 5.1.0
 
 ## Architecture Decisions
 
@@ -76,6 +78,95 @@ src/
 
 **Pattern**: `APP_SECTION_KEY` format for overrides
 
+### 7. Uniform Image Sizing (v2.3.0)
+**Decision**: Implement multiple image sizing modes with "Fit to Box" as default.
+
+**Rationale**:
+- Users need consistent image sizes across slides for professional presentations
+- Different use cases require different sizing strategies
+- Original behavior (fit width only) preserved as an option
+
+**Implementation**:
+- Four sizing modes: `fit_box`, `fit_width`, `fit_height`, `stretch`
+- `fit_box` (default): Scales images to fit within max width AND height while preserving aspect ratio
+- `fit_width`: Fixed width, auto height (original v2.2.0 behavior)
+- `fit_height`: Fixed height, auto width
+- `stretch`: Exact dimensions (may distort)
+
+**Code Location**: `src/pptx_generator.py:_calculate_scaled_size()`
+
+### 8. Portable Distribution (v2.3.0)
+**Decision**: Create self-contained portable bundle with embedded Python.
+
+**Rationale**:
+- Testers need simple installation (extract and run)
+- No Python installation required on target machine
+- All dependencies bundled
+
+**Implementation**:
+- `build_portable.bat`: Downloads Python embeddable, installs dependencies
+- `StimuPop.bat`: Launcher script for end users
+- `StimuPop_Portable.zip`: ~126MB distribution package
+
+### 9. Template-Based Generation (v5.1.0)
+**Decision**: Support template placeholder mode alongside blank slide generation.
+
+**Rationale**:
+- Users have existing "Variety Card" templates with precise formatting
+- Manual recreation of font sizes/styles is error-prone
+- Template approach preserves exact design intent
+
+**Implementation**:
+- `TEMPLATE_MODE_PLACEHOLDER`: Clone template slide for each row
+- Extract template shape info (position, size, font properties)
+- Map Excel columns to template paragraphs by index
+- Preserve empty paragraphs as spacers
+
+**Template Mapping (Variety Card)**:
+| Paragraph | Excel Column | Format |
+|-----------|--------------|--------|
+| P0 | C (Brand) | Arial 24pt Bold |
+| P1 | D (Product Name) | Arial 24pt Bold |
+| P2 | *(spacer)* | Empty |
+| P3 | E (Size) | Arial 19pt |
+| P4 | *(spacer)* | Empty |
+| P5 | F (Summary) | Arial 16pt |
+
+### 10. Rich Data Image Extraction (v5.1.0)
+**Decision**: Extract images from Excel 365 Rich Data structure.
+
+**Rationale**:
+- Users paste images directly into cells (Copy → Paste)
+- These images are stored in `xl/richData/` not `xl/drawings/`
+- Traditional `openpyxl._images` returns empty for these
+- Cell shows `#VALUE!` but image exists in archive
+
+**Implementation**:
+```
+xl/worksheets/sheet1.xml
+  └── <c r="B2" vm="1">  (vm = value metadata index)
+        ↓
+xl/richData/richValueRel.xml.rels
+  └── <Relationship Id="rId1" Target="../media/image1.png"/>
+        ↓
+xl/media/image1.png (extracted via zipfile)
+```
+
+**Code Location**: `src/image_handler.py:_extract_rich_data_images()`
+
+### 11. Configurable Paragraph Spacing (v5.1.0)
+**Decision**: Make paragraph spacing configurable with 0pt default.
+
+**Rationale**:
+- Previous hardcoded 12pt spacing created unwanted gaps between text lines
+- Users wanted text lines closer together (like their templates)
+- 0pt default means no extra spacing
+
+**Implementation**:
+- `SlideConfig.paragraph_spacing`: Float, points (default 0.0)
+- UI slider: 0-24pt range
+- Applied via `p.space_after = Pt(spacing)`
+
 ## Coding Conventions
 
 ### Type Hints
@@ -135,6 +226,8 @@ def example(param: str) -> bool:
 ### Entry Points
 - `app.py:main()` - Streamlit application entry
 - `app.py:generate_presentation()` - Core generation logic
+- `build_portable.bat` - Creates portable distribution
+- `create_user_guide.py` - Generates DOCX user guide
 
 ### Key Classes
 - `Config` - Configuration management
@@ -143,15 +236,39 @@ def example(param: str) -> bool:
 - `ImageCache` - TTL-based image caching
 - `ExcelProcessor` - Excel file handling
 - `PPTXGenerator` - PowerPoint generation
-- `SlideConfig` - Slide layout configuration
+- `SlideConfig` - Slide layout configuration (includes `img_height`, `img_size_mode`)
+- `ColumnFormat` - Per-column text formatting
+
+### Image Sizing Constants
+- `IMG_SIZE_FIT_BOX` - Fit within box, preserve aspect ratio
+- `IMG_SIZE_FIT_WIDTH` - Fixed width, auto height
+- `IMG_SIZE_FIT_HEIGHT` - Fixed height, auto width
+- `IMG_SIZE_STRETCH` - Exact size, may distort
+
+### Template Mode Constants (v5.1.0)
+- `TEMPLATE_MODE_BLANK` - Generate blank slides (original behavior)
+- `TEMPLATE_MODE_PLACEHOLDER` - Clone template and populate placeholders
 
 ### Data Flow
 ```
 Excel File → ExcelProcessor → slide_data → PPTXGenerator
                                               ↓
-                              ImageDownloader → images
+                              ImageLoader → images
+                              (including Rich Data extraction)
+                                              ↓
+                              Template Mode?
+                              ├── BLANK: _create_slide()
+                              └── PLACEHOLDER: _create_slide_from_template()
                                               ↓
                                          Presentation
+```
+
+### Rich Data Image Flow (v5.1.0)
+```
+Excel (xlsx archive)
+├── xl/worksheets/sheet1.xml  → Cell vm="N" attributes
+├── xl/richData/richValueRel.xml.rels → rIdN → image path
+└── xl/media/imageN.png → Actual image data
 ```
 
 ## Test Coverage
@@ -162,6 +279,8 @@ Excel File → ExcelProcessor → slide_data → PPTXGenerator
 3. Image download with errors
 4. Excel column resolution
 5. Slide generation with/without images
+6. Image sizing modes (fit_box, fit_width, fit_height, stretch)
+7. Aspect ratio preservation in fit modes
 
 ### Test Fixtures
 Located in `tests/conftest.py`:
@@ -169,6 +288,12 @@ Located in `tests/conftest.py`:
 - `sample_excel_bytes` - Excel file as bytes
 - `mock_image_result` - Successful image download
 - `mock_failed_image_result` - Failed image download
+
+### Image Sizing Test Cases
+- Wide image (1920x1080) with fit_box → should fit within bounds
+- Tall image (1080x1920) with fit_box → should fit within bounds
+- Square image with fit_box → should fit within bounds
+- Any image with stretch → should match exact dimensions
 
 ## Deployment Notes
 
@@ -187,3 +312,23 @@ APP_LOGGING_LEVEL=INFO
 ### Log Files
 Default location: `logs/app.log`
 Rotation: 10MB max, 5 backups
+
+### Portable Distribution
+For sharing with testers:
+1. Run `build_portable.bat` to create distribution
+2. Distribution created in `dist/` folder
+3. ZIP file: `StimuPop_Portable.zip` (~126MB)
+4. Tester extracts ZIP and runs `StimuPop.bat`
+
+### Distribution Contents
+```
+dist/
+├── StimuPop.bat          # Launch script
+├── StimuPop_User_Guide.docx  # User documentation
+├── app.py                # Main application
+├── config.yaml           # Configuration
+├── requirements.txt      # Dependencies list
+├── src/                  # Application modules
+├── python/               # Embedded Python 3.11.9
+└── logs/                 # Log directory
+```

@@ -5,7 +5,7 @@
 
 app:
   name: "StimuPop"
-  version: "2.1.0"
+  version: "2.3.0"
   max_upload_size_mb: 200
 
 images:
@@ -35,6 +35,10 @@ presentation:
   default_font_size: 14
   # Default image width in inches
   default_img_width: 5.5
+  # Default image height in inches
+  default_img_height: 4.0
+  # Default image size mode: fit_box, fit_width, fit_height, stretch
+  default_img_size_mode: "fit_box"
   # Default image top position in inches
   default_img_top: 0.5
   # Default text top position in inches

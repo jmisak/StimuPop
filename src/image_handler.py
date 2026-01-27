@@ -324,6 +324,10 @@ class ImageLoader:
 
         Images are keyed by their anchor cell (e.g., "B2", "C5").
 
+        Supports:
+        - Traditional embedded images (openpyxl _images)
+        - Rich Data images (Excel 365 pasted images)
+
         Args:
             excel_bytes: Excel file content as bytes
 
@@ -339,34 +343,116 @@ class ImageLoader:
             if sheet is None:
                 return results
 
-            # Get all images from the sheet
+            # Method 1: Traditional embedded images via openpyxl
             for image in sheet._images:
                 try:
-                    # Get anchor cell
                     anchor = image.anchor
                     if hasattr(anchor, '_from'):
                         col = anchor._from.col
                         row = anchor._from.row
-                        # Convert to Excel cell reference (A1 style)
                         col_letter = self._col_num_to_letter(col)
                         cell_ref = f"{col_letter}{row + 1}"
                     else:
                         cell_ref = f"image_{len(results)}"
 
-                    # Extract image data
                     img_data = image._data()
-
                     result = self.load_from_bytes(img_data, f"embedded:{cell_ref}")
                     results[cell_ref] = result
 
                 except Exception as e:
-                    logger.warning(f"Failed to extract embedded image: {e}")
+                    logger.warning(f"Failed to extract traditional embedded image: {e}")
                     continue
+
+            # Method 2: Rich Data images (Excel 365 pasted images)
+            # Only try if no traditional images found
+            if len(results) == 0:
+                rich_data_results = self._extract_rich_data_images(excel_bytes)
+                results.update(rich_data_results)
 
             logger.info(f"Extracted {len(results)} embedded images from Excel")
 
         except Exception as e:
             logger.error(f"Error extracting embedded images: {e}")
+
+        return results
+
+    def _extract_rich_data_images(self, excel_bytes: bytes) -> Dict[str, ImageResult]:
+        """
+        Extract Rich Data images from Excel 365 files.
+
+        These are images pasted directly into cells, stored in xl/richData/.
+
+        Args:
+            excel_bytes: Excel file content as bytes
+
+        Returns:
+            Dict mapping cell reference to ImageResult
+        """
+        import zipfile
+        import re
+
+        results: Dict[str, ImageResult] = {}
+
+        try:
+            with zipfile.ZipFile(BytesIO(excel_bytes), 'r') as z:
+                # Check if richData exists
+                file_list = z.namelist()
+                has_rich_data = any('richData' in f for f in file_list)
+
+                if not has_rich_data:
+                    return results
+
+                # Step 1: Get cell-to-vm mapping from sheet XML
+                # Find cells with vm attribute (value metadata index)
+                cell_to_vm = {}
+                try:
+                    sheet_xml = z.read('xl/worksheets/sheet1.xml').decode('utf-8')
+                    # Pattern: <c r="B2" ... vm="1">
+                    pattern = r'<c r="([A-Z]+)(\d+)"[^>]*vm="(\d+)"'
+                    for match in re.finditer(pattern, sheet_xml):
+                        col_letter = match.group(1)
+                        row_num = match.group(2)
+                        vm_index = int(match.group(3))
+                        cell_ref = f"{col_letter}{row_num}"
+                        cell_to_vm[cell_ref] = vm_index
+                except Exception as e:
+                    logger.warning(f"Could not parse sheet XML for vm attributes: {e}")
+                    return results
+
+                if not cell_to_vm:
+                    return results
+
+                # Step 2: Get vm-to-image mapping from richValueRel relationships
+                vm_to_image = {}
+                try:
+                    rels_xml = z.read('xl/richData/_rels/richValueRel.xml.rels').decode('utf-8')
+                    # Pattern: <Relationship Id="rId1" ... Target="../media/image1.png"/>
+                    pattern = r'Id="rId(\d+)"[^>]*Target="([^"]+)"'
+                    for match in re.finditer(pattern, rels_xml):
+                        rid_num = int(match.group(1))
+                        target = match.group(2)
+                        # vm index = rId number (vm=1 -> rId1 -> image)
+                        vm_to_image[rid_num] = target.replace('../', 'xl/')
+                except Exception as e:
+                    logger.warning(f"Could not parse richValueRel relationships: {e}")
+                    return results
+
+                # Step 3: Extract images and map to cells
+                for cell_ref, vm_index in cell_to_vm.items():
+                    if vm_index in vm_to_image:
+                        image_path = vm_to_image[vm_index]
+                        try:
+                            img_data = z.read(image_path)
+                            result = self.load_from_bytes(img_data, f"richdata:{cell_ref}")
+                            results[cell_ref] = result
+                            logger.debug(f"Extracted Rich Data image for {cell_ref}: {image_path}")
+                        except Exception as e:
+                            logger.warning(f"Could not extract image {image_path} for {cell_ref}: {e}")
+
+                logger.info(f"Extracted {len(results)} Rich Data images from Excel")
+
+        except Exception as e:
+            logger.error(f"Error extracting Rich Data images: {e}")
 
         return results
 
