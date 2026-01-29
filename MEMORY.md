@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 5.1.0
+**Current Version:** 6.0.0
 
 ## Architecture Decisions
 
@@ -166,6 +166,56 @@ xl/media/image1.png (extracted via zipfile)
 - `SlideConfig.paragraph_spacing`: Float, points (default 0.0)
 - UI slider: 0-24pt range
 - Applied via `p.space_after = Pt(spacing)`
+
+### 12. Configurable Image Alignment (v6.0.0)
+**Decision**: Add configurable image alignment within bounding box.
+
+**Rationale**:
+- Test user DR requested bottom-alignment for variety cards
+- Images should align to bottom of designated area, not center
+- Different layouts may need different alignment strategies
+
+**Implementation**:
+- `ImageAlignment` dataclass with `vertical` and `horizontal` fields
+- Vertical: top, center (default), bottom
+- Horizontal: left, center (default), right
+- `_calculate_image_position()` computes actual position based on alignment
+
+**Code Location**: `src/pptx_generator.py:_calculate_image_position()`
+
+### 13. Per-Column Fixed Positioning (v6.0.0)
+**Decision**: Allow columns to have fixed positions independent of preceding content.
+
+**Rationale**:
+- Test user DR feedback: columns E and F should stay in same position
+- Currently, text flows sequentially - E position depends on C/D content length
+- Variety cards need consistent layout regardless of content
+
+**Implementation**:
+- `ColumnPosition` dataclass with `mode` (auto/fixed), `top`, `left`, `width`
+- Auto mode: text flows from previous content (existing behavior)
+- Fixed mode: text placed at exact `top` position in separate textbox
+- `_add_text_fixed()`: Creates independent textbox for fixed columns
+- `_add_text_auto_flow()`: Groups auto columns into single flowing textbox
+
+**Code Location**:
+- `src/pptx_generator.py:_add_text_fixed()`
+- `src/pptx_generator.py:_add_text_auto_flow()`
+
+### 14. Simple/Advanced Mode Toggle (v6.0.0)
+**Decision**: Provide two UI complexity levels for positioning controls.
+
+**Rationale**:
+- Most users just need basic alignment (Simple mode)
+- Power users need per-column control (Advanced mode)
+- Avoid overwhelming casual users with options
+
+**Implementation**:
+- Simple mode (default): Just vertical/horizontal alignment dropdowns
+- Advanced mode (checkbox): Adds per-column position expanders
+- Column defaults: E at 5.0", F at 6.5" (based on DR's variety card layout)
+
+**UI Location**: `app.py:render_advanced_settings()`
 
 ## Coding Conventions
 

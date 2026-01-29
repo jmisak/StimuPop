@@ -1,7 +1,12 @@
 """
-StimuPop - Source Package v5.1
+StimuPop - Source Package v6.0
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
+
+New in v6.0:
+- Configurable image alignment (top/center/bottom, left/center/right)
+- Per-column fixed text positioning
+- Simple/Advanced positioning modes
 
 New in v5.1:
 - Template-based placeholder population
@@ -23,10 +28,17 @@ from .pptx_generator import (
     PPTXGenerator,
     SlideConfig,
     ColumnFormat,
+    ImageAlignment,
+    ColumnPosition,
     IMG_SIZE_FIT_BOX,
     IMG_SIZE_FIT_WIDTH,
     IMG_SIZE_FIT_HEIGHT,
     IMG_SIZE_STRETCH,
+    IMG_ALIGN_TOP,
+    IMG_ALIGN_CENTER,
+    IMG_ALIGN_BOTTOM,
+    IMG_ALIGN_LEFT,
+    IMG_ALIGN_RIGHT,
     TEMPLATE_MODE_BLANK,
     TEMPLATE_MODE_PLACEHOLDER,
 )
@@ -54,14 +66,22 @@ __all__ = [
     "PPTXGenerator",
     "SlideConfig",
     "ColumnFormat",
+    "ImageAlignment",
+    "ColumnPosition",
     # Image sizing modes
     "IMG_SIZE_FIT_BOX",
     "IMG_SIZE_FIT_WIDTH",
     "IMG_SIZE_FIT_HEIGHT",
     "IMG_SIZE_STRETCH",
+    # Image alignment (NEW in v6.0)
+    "IMG_ALIGN_TOP",
+    "IMG_ALIGN_CENTER",
+    "IMG_ALIGN_BOTTOM",
+    "IMG_ALIGN_LEFT",
+    "IMG_ALIGN_RIGHT",
     # Template modes (NEW in v5.1)
     "TEMPLATE_MODE_BLANK",
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "5.1.0"
+__version__ = "6.0.0"

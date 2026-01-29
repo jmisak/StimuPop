@@ -5,15 +5,18 @@ A production-grade web application that converts Excel data to
 PowerPoint presentations with embedded images and formatted text.
 
 Features:
-- Template-based placeholder population (NEW in v5.1)
-- Configurable paragraph spacing (NEW in v5.1)
+- Configurable image alignment (NEW in v6.0)
+- Per-column fixed text positioning (NEW in v6.0)
+- Simple/Advanced positioning modes (NEW in v6.0)
+- Template-based placeholder population
+- Configurable paragraph spacing
 - Embedded Excel image extraction
 - Local file path image support
 - Configurable slide layout
 - Progress tracking
 - Comprehensive error handling
 
-Version: 5.1.0 Tester
+Version: 6.0.0
 """
 
 import tempfile
@@ -39,6 +42,14 @@ from src import (
     IMG_SIZE_STRETCH,
     TEMPLATE_MODE_BLANK,
     TEMPLATE_MODE_PLACEHOLDER,
+    # NEW in v6.0 - Configurable positioning
+    ImageAlignment,
+    ColumnPosition,
+    IMG_ALIGN_TOP,
+    IMG_ALIGN_CENTER,
+    IMG_ALIGN_BOTTOM,
+    IMG_ALIGN_LEFT,
+    IMG_ALIGN_RIGHT,
 )
 from src.logging_config import setup_logging, request_context, get_logger
 from src.excel_handler import parse_column_input
@@ -83,7 +94,8 @@ def render_app():
     # Advanced settings
     (img_width, img_height, img_size_mode, img_top, text_top, orientation,
      column_formats, paragraph_spacing, template_mode,
-     image_placeholder_name, text_placeholder_name) = render_advanced_settings(text_columns, font_size)
+     image_placeholder_name, text_placeholder_name,
+     img_v_align, img_h_align, column_positions) = render_advanced_settings(text_columns, font_size)
 
     st.markdown("---")
 
@@ -114,7 +126,10 @@ def render_app():
         paragraph_spacing=paragraph_spacing,
         template_mode=template_mode,
         image_placeholder_name=image_placeholder_name,
-        text_placeholder_name=text_placeholder_name
+        text_placeholder_name=text_placeholder_name,
+        img_v_align=img_v_align,
+        img_h_align=img_h_align,
+        column_positions=column_positions
     )
 
     # Instructions
@@ -310,6 +325,80 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
                 help="Portrait (tall) or Landscape (wide) slides"
             )
 
+        # Image Alignment (NEW in v6.0)
+        st.markdown("---")
+        st.markdown("#### 🎯 Image Alignment")
+        st.caption("Control how images are positioned within their bounding box")
+
+        align_col1, align_col2 = st.columns(2)
+        with align_col1:
+            img_v_align = st.selectbox(
+                "Vertical Alignment",
+                options=["Center", "Top", "Bottom"],
+                index=0,
+                help="Vertical position of image within image area"
+            )
+        with align_col2:
+            img_h_align = st.selectbox(
+                "Horizontal Alignment",
+                options=["Center", "Left", "Right"],
+                index=0,
+                help="Horizontal position of image within image area"
+            )
+
+        # Map display names to constants
+        v_align_map = {"Top": "top", "Center": "center", "Bottom": "bottom"}
+        h_align_map = {"Left": "left", "Center": "center", "Right": "right"}
+        img_v_align_value = v_align_map[img_v_align]
+        img_h_align_value = h_align_map[img_h_align]
+
+        # Advanced Positioning Mode (NEW in v6.0)
+        st.markdown("---")
+        advanced_mode = st.checkbox(
+            "🔧 Enable Advanced Positioning",
+            value=False,
+            help="Enable per-column fixed positioning for precise layout control"
+        )
+
+        column_positions = None
+        if advanced_mode:
+            st.markdown("#### 📐 Per-Column Positioning")
+            st.caption("Set fixed positions for columns E and F (common for variety cards)")
+
+            pos_columns = parse_column_input(text_columns_str)
+            if pos_columns:
+                column_positions = {}
+                for col in pos_columns:
+                    with st.expander(f"Column {col} Position", expanded=(col in ['E', 'F'])):
+                        pos_mode = st.radio(
+                            f"Position Mode for {col}",
+                            options=["Auto (flow after previous)", "Fixed position"],
+                            key=f"pos_mode_{col}",
+                            horizontal=True
+                        )
+                        if pos_mode == "Fixed position":
+                            col_top = st.number_input(
+                                f"Top position (inches)",
+                                min_value=0.0,
+                                max_value=10.0,
+                                value=5.0 if col == 'E' else 6.5 if col == 'F' else 5.0,
+                                step=0.25,
+                                key=f"col_top_{col}"
+                            )
+                            col_left = st.number_input(
+                                f"Left margin (inches)",
+                                min_value=0.0,
+                                max_value=5.0,
+                                value=0.5,
+                                step=0.25,
+                                key=f"col_left_{col}"
+                            )
+                            column_positions[col] = {
+                                "mode": "fixed",
+                                "top": col_top,
+                                "left": col_left
+                            }
+
         # Per-column formatting section (Blank mode only)
         if template_mode == TEMPLATE_MODE_BLANK:
             st.markdown("---")
@@ -318,7 +407,8 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
 
     return (img_width, img_height, img_size_mode, img_top, text_top, orientation,
             column_formats, paragraph_spacing, template_mode,
-            image_placeholder_name, text_placeholder_name)
+            image_placeholder_name, text_placeholder_name,
+            img_v_align_value, img_h_align_value, column_positions)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -478,7 +568,10 @@ def render_generate_section(
     paragraph_spacing,
     template_mode,
     image_placeholder_name,
-    text_placeholder_name
+    text_placeholder_name,
+    img_v_align,
+    img_h_align,
+    column_positions
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -511,7 +604,10 @@ def render_generate_section(
             paragraph_spacing=paragraph_spacing,
             template_mode=template_mode,
             image_placeholder_name=image_placeholder_name,
-            text_placeholder_name=text_placeholder_name
+            text_placeholder_name=text_placeholder_name,
+            img_v_align=img_v_align,
+            img_h_align=img_h_align,
+            column_positions=column_positions
         )
 
 
@@ -532,7 +628,10 @@ def generate_presentation(
     paragraph_spacing,
     template_mode,
     image_placeholder_name,
-    text_placeholder_name
+    text_placeholder_name,
+    img_v_align,
+    img_h_align,
+    column_positions
 ):
     """Generate the PowerPoint presentation."""
     logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
@@ -567,6 +666,23 @@ def generate_presentation(
         # Extract slide data with column identity preserved
         slide_data = processor.get_slide_data(df, resolved_img, resolved_text, preserve_column_identity=True)
 
+        # Create image alignment config (NEW in v6.0)
+        image_alignment = ImageAlignment(
+            vertical=img_v_align,
+            horizontal=img_h_align
+        )
+
+        # Create column positions config (NEW in v6.0)
+        col_positions = None
+        if column_positions:
+            col_positions = {}
+            for col, pos in column_positions.items():
+                col_positions[col] = ColumnPosition(
+                    mode=pos.get("mode", "auto"),
+                    top=pos.get("top"),
+                    left=pos.get("left", 0.5)
+                )
+
         # Create slide configuration with per-column formats
         config = SlideConfig(
             img_column=resolved_img,
@@ -582,7 +698,9 @@ def generate_presentation(
             paragraph_spacing=paragraph_spacing,
             template_mode=template_mode,
             image_placeholder_name=image_placeholder_name,
-            text_placeholder_name=text_placeholder_name
+            text_placeholder_name=text_placeholder_name,
+            image_alignment=image_alignment,
+            column_positions=col_positions
         )
 
         # Get template bytes if provided

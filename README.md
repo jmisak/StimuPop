@@ -2,7 +2,7 @@
 
 **Excel to PowerPoint Converter with Embedded Images**
 
-[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](VERSION_HISTORY.md)
+[![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)](VERSION_HISTORY.md)
 [![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.24+-red.svg)](https://streamlit.io)
 
@@ -12,6 +12,9 @@ StimuPop is a production-grade web application that converts Excel spreadsheet r
 
 - **Embedded Image Extraction** - Automatically extracts images embedded in Excel cells
 - **Uniform Image Sizing** - Multiple sizing modes ensure consistent image dimensions across all slides
+- **Image Alignment** - Position images within their bounding box (top/center/bottom, left/center/right)
+- **Per-Column Fixed Positioning** - Lock specific columns to exact positions, independent of preceding content
+- **Simple/Advanced Mode** - Choose between easy-to-use defaults or full layout control
 - **Per-Column Text Formatting** - Customize font, size, color, bold/italic for each column
 - **Template Support** - Use your own PowerPoint templates for branding
 - **Portrait & Landscape** - Support for both slide orientations
@@ -75,6 +78,22 @@ Structure your Excel file with:
 | **Fit Height** | Fixed height, width adjusts automatically |
 | **Stretch** | Exact dimensions (may distort) |
 
+**Image Alignment (v6.0.0+):**
+
+| Setting | Options |
+|---------|---------|
+| **Vertical** | Top, Center (default), Bottom |
+| **Horizontal** | Left, Center (default), Right |
+
+**Column Positioning (Advanced Mode):**
+
+| Mode | Description |
+|------|-------------|
+| **Auto** | Column flows after the previous element (default behavior) |
+| **Fixed** | Column stays at an exact position (e.g., 5.0 inches from left) |
+
+Use Fixed positioning when you need columns to stay in place regardless of how much text appears in earlier columns.
+
 ### 3. Generate
 
 Click "Generate Presentation" and download your `.pptx` file.
@@ -109,7 +128,7 @@ stimupop/
 ```yaml
 app:
   name: "StimuPop"
-  version: "2.3.0"
+  version: "6.0.0"
   max_upload_size_mb: 200
 
 presentation:
@@ -141,7 +160,7 @@ Create a self-contained distribution for testers:
 # Run the build script
 build_portable.bat
 
-# Output: StimuPop_Portable.zip (~126MB)
+# Output: StimuPop_v6.0.0_FINAL.zip (~515MB)
 ```
 
 The portable version includes:
@@ -179,6 +198,37 @@ from src import (
     IMG_SIZE_FIT_HEIGHT, # Fixed height, auto width
     IMG_SIZE_STRETCH     # Exact size, may distort
 )
+```
+
+### Image Alignment (v6.0.0+)
+
+```python
+from src import (
+    ImageAlignment,
+    IMG_ALIGN_TOP,       # Align to top of bounding box
+    IMG_ALIGN_CENTER,    # Center alignment (default)
+    IMG_ALIGN_BOTTOM,    # Align to bottom of bounding box
+    IMG_ALIGN_LEFT,      # Align to left of bounding box
+    IMG_ALIGN_RIGHT      # Align to right of bounding box
+)
+
+# Example: Top-left alignment
+alignment = ImageAlignment(
+    vertical=IMG_ALIGN_TOP,
+    horizontal=IMG_ALIGN_LEFT
+)
+```
+
+### Column Positioning (v6.0.0+)
+
+```python
+from src import ColumnPosition
+
+# Fixed position at 5.0 inches from left edge
+col_e_position = ColumnPosition(mode="fixed", position=5.0)
+
+# Auto position (flows after previous content)
+col_c_position = ColumnPosition(mode="auto")
 ```
 
 ### PPTXGenerator
@@ -226,13 +276,21 @@ pytest tests/test_pptx_generator.py -v
 | Browser doesn't open | Navigate to `http://localhost:8501` manually |
 | Images not appearing | Check images are embedded (not floating) in Excel |
 | Different image sizes | Set Size Mode to "Fit to Box" in Advanced Settings |
+| Text columns overlapping | Use Fixed positioning for columns that need exact placement |
+| Image not centered | Adjust Image Alignment settings (vertical/horizontal) |
 | Slow generation | Reduce image sizes in Excel before upload |
 
 ## Version History
 
 See [VERSION_HISTORY.md](VERSION_HISTORY.md) for detailed changelog.
 
-### v2.3.0 (Current)
+### v6.0.0 (Current)
+- **Image Alignment**: Position images within their bounding box (top/center/bottom, left/center/right)
+- **Per-Column Fixed Positioning**: Lock columns to exact positions independent of preceding content
+- **Simple/Advanced Mode Toggle**: Easy mode for quick use, advanced mode for full control
+- Fully backward compatible with existing configurations
+
+### v2.3.0
 - Added uniform image sizing with 4 modes
 - Added Max Height control
 - Created portable distribution system

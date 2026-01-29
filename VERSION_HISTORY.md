@@ -1,5 +1,86 @@
 # Version History
 
+## [2026-01-29] - v6.0.0: Configurable Positioning System
+
+### Summary
+User-requested feature release adding configurable image alignment and per-column text positioning with Simple + Advanced mode toggle. Addresses feedback from test user DR for variety card layout customization.
+
+### Features Added
+- **Image Alignment**: Vertical (top/center/bottom) and horizontal (left/center/right) alignment
+  - Default: center (backward compatible)
+  - DR feedback: bottom alignment preferred for variety cards
+- **Per-Column Fixed Positioning**: Columns E and F can have fixed positions regardless of C/D content length
+  - Auto mode: text flows sequentially (existing behavior)
+  - Fixed mode: text placed at exact top position
+- **Simple/Advanced Mode Toggle**: Hide complexity from casual users
+  - Simple mode: Just image alignment dropdowns
+  - Advanced mode: Full per-column position controls
+
+### Technical Details
+
+#### New Components
+| Component | Description |
+|-----------|-------------|
+| `ImageAlignment` | Dataclass with vertical/horizontal alignment |
+| `ColumnPosition` | Dataclass with mode (auto/fixed), top, left, width |
+| `SlideConfig.image_alignment` | Image positioning configuration |
+| `SlideConfig.column_positions` | Dict mapping columns to ColumnPosition |
+| `SlideConfig.positioning_mode` | "simple" or "advanced" |
+| `_calculate_image_position()` | Calculates image position based on alignment |
+| `_add_text_fixed()` | Adds text at fixed position (separate textbox) |
+| `_add_text_auto_flow()` | Adds text in sequential flow |
+
+#### New Constants
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `IMG_ALIGN_TOP` | "top" | Vertical alignment |
+| `IMG_ALIGN_CENTER` | "center" | Vertical alignment (default) |
+| `IMG_ALIGN_BOTTOM` | "bottom" | Vertical alignment |
+| `IMG_ALIGN_LEFT` | "left" | Horizontal alignment |
+| `IMG_ALIGN_RIGHT` | "right" | Horizontal alignment (default: center) |
+
+#### Image Alignment Logic
+```
+Vertical:
+  - top:    img_top = box_top
+  - center: img_top = box_top + (box_height - img_height) / 2
+  - bottom: img_top = box_top + box_height - img_height
+
+Horizontal:
+  - left:   img_left = box_left
+  - center: img_left = box_left + (box_width - img_width) / 2
+  - right:  img_left = box_left + box_width - img_width
+```
+
+#### UI Changes
+```
+Advanced Settings
+├── Image Alignment (NEW)
+│   ├── Vertical Alignment: [Center | Top | Bottom]
+│   └── Horizontal Alignment: [Center | Left | Right]
+├── Advanced Positioning (NEW, optional)
+│   └── Per-Column Position
+│       ├── Column C: [Auto | Fixed]
+│       ├── Column D: [Auto | Fixed]
+│       ├── Column E: [Auto | Fixed] ← default 5.0"
+│       └── Column F: [Auto | Fixed] ← default 6.5"
+├── Template Mode
+├── Text Spacing
+├── Image Sizing
+└── Column Formatting
+```
+
+### API Changes
+- `SlideConfig` accepts `image_alignment`, `column_positions`, `positioning_mode`
+- New exports: `ImageAlignment`, `ColumnPosition`, `IMG_ALIGN_TOP`, `IMG_ALIGN_CENTER`, `IMG_ALIGN_BOTTOM`, `IMG_ALIGN_LEFT`, `IMG_ALIGN_RIGHT`
+
+### Backward Compatibility
+- `image_alignment = None` → uses legacy center behavior
+- `column_positions = None` → uses legacy sequential flow
+- All existing configurations continue to work unchanged
+
+---
+
 ## [2026-01-27] - v5.1.0: Template Mode & Rich Data Image Support
 
 ### Summary

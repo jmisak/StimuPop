@@ -71,6 +71,43 @@ IMG_SIZE_STRETCH = "stretch"      # Exact size, may distort
 TEMPLATE_MODE_BLANK = "blank"      # Create blank slides (original behavior)
 TEMPLATE_MODE_PLACEHOLDER = "placeholder"  # Use template placeholders
 
+# Image alignment options (NEW in v6.0)
+IMG_ALIGN_TOP = "top"
+IMG_ALIGN_CENTER = "center"
+IMG_ALIGN_BOTTOM = "bottom"
+IMG_ALIGN_LEFT = "left"
+IMG_ALIGN_RIGHT = "right"
+
+
+@dataclass
+class ImageAlignment:
+    """
+    Controls image positioning within the image bounding box.
+
+    Attributes:
+        vertical: 'top' | 'center' | 'bottom' - vertical alignment within box
+        horizontal: 'left' | 'center' | 'right' - horizontal alignment within box
+    """
+    vertical: str = IMG_ALIGN_CENTER
+    horizontal: str = IMG_ALIGN_CENTER
+
+
+@dataclass
+class ColumnPosition:
+    """
+    Per-column text positioning configuration.
+
+    Attributes:
+        mode: 'auto' | 'fixed' - auto flows after previous, fixed uses explicit position
+        top: Fixed top position in inches (only used if mode='fixed')
+        left: Left margin in inches
+        width: Text box width in inches (None = slide width - margins)
+    """
+    mode: str = "auto"  # auto | fixed
+    top: Optional[float] = None  # Only used if mode='fixed'
+    left: float = 0.5  # Default left margin
+    width: Optional[float] = None  # None = auto width
+
 
 @dataclass
 class SlideConfig:
@@ -108,12 +145,28 @@ class SlideConfig:
     template_mode: str = TEMPLATE_MODE_BLANK
     image_placeholder_name: str = "Rectangle 1"  # Default from Variety Card
     text_placeholder_name: str = "TextBox"  # Will match any TextBox
+    # NEW in v6.0 - Configurable positioning
+    image_alignment: Optional[ImageAlignment] = None  # None = center (legacy behavior)
+    column_positions: Optional[Dict[str, ColumnPosition]] = None  # None = auto flow all
+    positioning_mode: str = "simple"  # simple | advanced
 
     def get_column_format(self, column: str) -> ColumnFormat:
         """Get format for column, falling back to defaults."""
         if self.column_formats and column in self.column_formats:
             return self.column_formats[column]
         return ColumnFormat(column=column, font_size=self.font_size)
+
+    def get_image_alignment(self) -> ImageAlignment:
+        """Get image alignment, defaulting to center if not set."""
+        if self.image_alignment is not None:
+            return self.image_alignment
+        return ImageAlignment()  # Default: center/center
+
+    def get_column_position(self, column: str) -> Optional[ColumnPosition]:
+        """Get position config for column, or None if auto."""
+        if self.column_positions and column in self.column_positions:
+            return self.column_positions[column]
+        return None  # Auto flow
 
 
 @dataclass
@@ -464,7 +517,7 @@ class PPTXGenerator:
         img_result: ImageResult,
         left, top, max_width, max_height
     ) -> None:
-        """Add image at specified position, scaled to fit."""
+        """Add image at specified position, scaled to fit with alignment."""
         img_result.data.seek(0)
         orig_width, orig_height = self._get_image_dimensions(img_result.data)
         img_result.data.seek(0)
@@ -476,13 +529,20 @@ class PPTXGenerator:
             IMG_SIZE_FIT_BOX
         )
 
-        # Center within the placeholder bounds
-        img_left = left + Emu((max_width.emu - Inches(final_width).emu) // 2)
-        img_top = top + Emu((max_height.emu - Inches(final_height).emu) // 2)
+        # Get alignment settings
+        alignment = self.config.get_image_alignment()
+
+        # Calculate position based on alignment within placeholder bounds
+        img_left_inches, img_top_inches = self._calculate_image_position(
+            final_width, final_height,
+            left.inches, top.inches,
+            max_width.inches, max_height.inches,
+            alignment
+        )
 
         slide.shapes.add_picture(
             img_result.data,
-            img_left, img_top,
+            Inches(img_left_inches), Inches(img_top_inches),
             Inches(final_width), Inches(final_height)
         )
 
@@ -691,13 +751,56 @@ class PPTXGenerator:
             else:
                 return max_width, height_if_fit_width
 
+    def _calculate_image_position(
+        self,
+        img_width: float,
+        img_height: float,
+        box_left: float,
+        box_top: float,
+        box_width: float,
+        box_height: float,
+        alignment: ImageAlignment
+    ) -> Tuple[float, float]:
+        """
+        Calculate image position based on alignment within bounding box.
+
+        Args:
+            img_width: Scaled image width in inches
+            img_height: Scaled image height in inches
+            box_left: Bounding box left in inches
+            box_top: Bounding box top in inches
+            box_width: Bounding box width in inches
+            box_height: Bounding box height in inches
+            alignment: ImageAlignment with vertical and horizontal settings
+
+        Returns:
+            Tuple of (left_inches, top_inches)
+        """
+        # Calculate horizontal position
+        if alignment.horizontal == IMG_ALIGN_LEFT:
+            left = box_left
+        elif alignment.horizontal == IMG_ALIGN_RIGHT:
+            left = box_left + box_width - img_width
+        else:  # center (default)
+            left = box_left + (box_width - img_width) / 2
+
+        # Calculate vertical position
+        if alignment.vertical == IMG_ALIGN_TOP:
+            top = box_top
+        elif alignment.vertical == IMG_ALIGN_BOTTOM:
+            top = box_top + box_height - img_height
+        else:  # center (default)
+            top = box_top + (box_height - img_height) / 2
+
+        return (left, top)
+
     def _add_image(
         self,
         slide,
         prs: Presentation,
         img_result: ImageResult
     ) -> None:
-        """Add image to slide with configurable sizing."""
+        """Add image to slide with configurable sizing and alignment."""
         img_result.data.seek(0)
         orig_width, orig_height = self._get_image_dimensions(img_result.data)
         img_result.data.seek(0)
@@ -708,15 +811,30 @@ class PPTXGenerator:
             self.config.img_size_mode
         )
 
+        # Get alignment settings
+        alignment = self.config.get_image_alignment()
+
+        # Calculate bounding box - centered horizontally on slide by default
+        slide_width_inches = prs.slide_width.inches
+        box_left = (slide_width_inches - self.config.img_width) / 2
+        box_top = self.config.img_top
+        box_width = self.config.img_width
+        box_height = self.config.img_height
+
+        # Calculate position based on alignment
+        img_left, img_top = self._calculate_image_position(
+            final_width, final_height,
+            box_left, box_top, box_width, box_height,
+            alignment
+        )
+
         pic = slide.shapes.add_picture(
             img_result.data,
-            Inches(1),
-            Inches(self.config.img_top),
+            Inches(img_left),
+            Inches(img_top),
             width=Inches(final_width),
             height=Inches(final_height)
         )
-
-        pic.left = int((prs.slide_width - pic.width) / 2)
 
     def _add_text(
         self,
@@ -724,7 +842,42 @@ class PPTXGenerator:
         prs: Presentation,
         text_content: List[Union[str, dict]]
     ) -> None:
-        """Add text content to slide with per-column formatting and configurable spacing."""
+        """Add text content to slide with per-column formatting and configurable spacing.
+
+        Supports two modes:
+        - Auto flow: All columns in single textbox (default/legacy)
+        - Fixed positions: Columns with fixed positions get separate textboxes
+        """
+        # Separate auto and fixed columns
+        auto_items = []
+        fixed_items = []
+
+        for item in text_content:
+            if isinstance(item, dict):
+                col = item.get("column", "")
+                col_pos = self.config.get_column_position(col)
+                if col_pos and col_pos.mode == "fixed" and col_pos.top is not None:
+                    fixed_items.append((item, col_pos))
+                else:
+                    auto_items.append(item)
+            else:
+                auto_items.append(item)
+
+        # Add auto-flow columns in single textbox (original behavior)
+        if auto_items:
+            self._add_text_auto_flow(slide, prs, auto_items)
+
+        # Add fixed-position columns as separate textboxes
+        for item, col_pos in fixed_items:
+            self._add_text_fixed(slide, prs, item, col_pos)
+
+    def _add_text_auto_flow(
+        self,
+        slide,
+        prs: Presentation,
+        text_items: List[Union[str, dict]]
+    ) -> None:
+        """Add text items in auto-flow mode (single textbox, sequential paragraphs)."""
         text_height = prs.slide_height.inches - self.config.text_top - 0.5
 
         textbox = slide.shapes.add_textbox(
@@ -737,7 +890,7 @@ class PPTXGenerator:
         text_frame = textbox.text_frame
         text_frame.word_wrap = True
 
-        for i, item in enumerate(text_content):
+        for i, item in enumerate(text_items):
             if isinstance(item, dict):
                 text = item.get("text", "")
                 col_format = self.config.get_column_format(item.get("column", ""))
@@ -762,6 +915,48 @@ class PPTXGenerator:
 
             p.alignment = PP_ALIGN.CENTER
             p.space_after = Pt(self.config.paragraph_spacing)
+
+    def _add_text_fixed(
+        self,
+        slide,
+        prs: Presentation,
+        item: dict,
+        col_pos: ColumnPosition
+    ) -> None:
+        """Add a single text item at a fixed position."""
+        text = item.get("text", "")
+        col = item.get("column", "")
+        col_format = self.config.get_column_format(col)
+
+        # Calculate dimensions
+        left = col_pos.left
+        top = col_pos.top
+        width = col_pos.width if col_pos.width else (prs.slide_width.inches - 1.0)
+        height = 1.5  # Default height for fixed text boxes
+
+        textbox = slide.shapes.add_textbox(
+            Inches(left),
+            Inches(top),
+            Inches(width),
+            Inches(height)
+        )
+
+        text_frame = textbox.text_frame
+        text_frame.word_wrap = True
+
+        p = text_frame.paragraphs[0]
+        run = p.add_run()
+        run.text = text
+
+        font = run.font
+        font.size = Pt(col_format.font_size)
+        font.bold = col_format.bold
+        font.italic = col_format.italic
+        font.name = col_format.font_name
+        font.color.rgb = col_format.get_rgb_color()
+
+        p.alignment = PP_ALIGN.CENTER
+        p.space_after = Pt(self.config.paragraph_spacing)
 
 
 def create_presentation(
