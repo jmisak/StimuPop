@@ -3,27 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StimuPop User Guide - Version 6.2.0</title>
+    <title>StimuPop User Guide - v7.0.0</title>
     <style>
         :root {
-            --primary-color: #2E74B5;
-            --secondary-color: #4472C4;
+            --primary-blue: #2E74B5;
+            --secondary-blue: #4472C4;
             --text-gray: #666666;
-            --light-bg: #E7F3FF;
-            --success-green: #28A745;
-            --warning-yellow: #FFF3CD;
+            --light-bg: #F8F9FA;
+            --info-bg: #E7F3FF;
+            --warning-bg: #FFF3CD;
+            --tip-bg: #D4EDDA;
             --warning-border: #856404;
-            --tip-green: #D4EDDA;
             --tip-border: #155724;
-            --table-alt: #F8F9FA;
         }
-
-        * {
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', Calibri, Arial, sans-serif;
             font-size: 16px;
             line-height: 1.6;
             color: #333;
@@ -32,361 +27,76 @@
             padding: 20px;
             background: #fff;
         }
-
-        h1 {
-            color: var(--primary-color);
-            font-size: 28px;
-            border-bottom: 3px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-top: 40px;
-        }
-
-        h2 {
-            color: var(--primary-color);
-            font-size: 22px;
-            margin-top: 30px;
-        }
-
-        h3 {
-            color: var(--secondary-color);
-            font-size: 18px;
-            margin-top: 25px;
-        }
-
-        .title-page {
-            text-align: center;
-            padding: 60px 0;
-            border-bottom: 2px solid var(--primary-color);
-            margin-bottom: 40px;
-        }
-
-        .title-page h1 {
-            font-size: 48px;
-            border: none;
-            margin: 0;
-        }
-
-        .title-page .subtitle {
-            font-size: 24px;
-            color: var(--text-gray);
-            margin: 20px 0;
-        }
-
-        .title-page .guide-label {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--secondary-color);
-            margin: 30px 0;
-        }
-
-        .version-box {
-            display: inline-block;
-            background: var(--light-bg);
-            padding: 10px 30px;
+        h1 { color: var(--primary-blue); font-size: 2em; border-bottom: 2px solid var(--secondary-blue); padding-bottom: 10px; }
+        h2 { color: var(--primary-blue); font-size: 1.5em; margin-top: 2em; }
+        h3 { color: var(--secondary-blue); font-size: 1.2em; margin-top: 1.5em; }
+        .title-page { text-align: center; padding: 60px 20px; }
+        .title-page h1 { font-size: 3em; border: none; }
+        .title-page .subtitle { font-size: 1.5em; color: var(--text-gray); }
+        .title-page .version { display: inline-block; background: var(--info-bg); color: var(--primary-blue); padding: 10px 30px; border-radius: 5px; margin-top: 20px; }
+        .info-box, .warning-box, .tip-box {
+            padding: 15px 20px;
             border-radius: 5px;
-            color: var(--primary-color);
-            font-size: 14px;
-        }
-
-        .toc {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
             margin: 20px 0;
+            border-left: 4px solid;
         }
-
-        .toc-item {
-            display: flex;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .toc-item:last-child {
-            border-bottom: none;
-        }
-
-        .toc-num {
-            font-weight: bold;
-            width: 40px;
-        }
-
-        .toc-title {
-            font-weight: bold;
-            width: 200px;
-        }
-
-        .toc-title a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .toc-title a:hover {
-            text-decoration: underline;
-        }
-
-        .toc-desc {
-            color: var(--text-gray);
-        }
-
-        .info-box {
-            background: var(--light-bg);
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin: 20px 0;
-        }
-
-        .info-box .title {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .warning-box {
-            background: var(--warning-yellow);
-            border: 2px solid var(--warning-border);
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin: 20px 0;
-        }
-
-        .warning-box .title {
-            font-weight: bold;
-            color: var(--warning-border);
-            margin-bottom: 10px;
-        }
-
-        .tip-box {
-            background: var(--tip-green);
-            border: 2px solid var(--tip-border);
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin: 20px 0;
-        }
-
-        .tip-box .title {
-            font-weight: bold;
-            color: var(--tip-border);
-            margin-bottom: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        th {
-            background: var(--primary-color);
+        .info-box { background: var(--info-bg); border-color: var(--primary-blue); }
+        .warning-box { background: var(--warning-bg); border-color: var(--warning-border); }
+        .tip-box { background: var(--tip-bg); border-color: var(--tip-border); }
+        .info-box strong, .warning-box strong, .tip-box strong { display: block; margin-bottom: 5px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: var(--primary-blue); color: white; }
+        tr:nth-child(even) { background: var(--light-bg); }
+        .step-table { margin: 20px 0; }
+        .step-table .step-num {
+            background: var(--primary-blue);
             color: white;
-            padding: 12px;
-            text-align: left;
             font-weight: bold;
-        }
-
-        td {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-        }
-
-        tr:nth-child(even) {
-            background: var(--table-alt);
-        }
-
-        .step-table {
-            margin: 20px 0;
-        }
-
-        .step-row {
-            display: flex;
-            margin-bottom: 2px;
-        }
-
-        .step-num {
-            background: var(--primary-color);
-            color: white;
+            text-align: center;
             width: 50px;
-            min-width: 50px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            padding: 12px 0;
         }
-
-        .step-text {
-            flex: 1;
-            padding: 12px 15px;
-            background: #f8f9fa;
-        }
-
-        .step-row:nth-child(odd) .step-text {
-            background: #fff;
-        }
-
-        ul.feature-list {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        ul.feature-list li {
-            padding: 5px 0;
-        }
-
-        ul.feature-list li::before {
-            content: "\2713 ";
-            color: var(--success-green);
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        ul.bullet-list {
-            padding-left: 25px;
-        }
-
-        ul.bullet-list li {
-            padding: 3px 0;
-        }
-
-        .setting-item {
-            margin: 10px 0;
-        }
-
-        .setting-item strong {
-            display: inline;
-        }
-
-        code {
-            font-family: 'Consolas', 'Monaco', monospace;
-            background: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .issue {
-            margin: 25px 0;
-        }
-
-        .issue-title {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .issue-solution {
-            margin-left: 25px;
-            margin-top: 8px;
-        }
-
-        .shortcut {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .shortcut-key {
-            font-family: 'Consolas', monospace;
-            font-weight: bold;
-            background: #f4f4f4;
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin-right: 15px;
-        }
-
-        .final-page {
-            text-align: center;
-            padding: 80px 0;
-            margin-top: 60px;
-            border-top: 2px solid var(--primary-color);
-        }
-
-        .final-page h2 {
-            color: var(--primary-color);
-            font-size: 24px;
-            border: none;
-        }
-
-        .final-page .version {
-            color: var(--text-gray);
-            margin-top: 20px;
-        }
-
+        ul.features li::marker { color: #28A745; }
+        code { font-family: Consolas, monospace; background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        .toc { background: var(--light-bg); padding: 20px; border-radius: 5px; }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { padding: 5px 0; }
+        .toc a { color: var(--primary-blue); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
         @media print {
-            body {
-                max-width: none;
-                padding: 0;
-            }
-
-            .title-page {
-                page-break-after: always;
-            }
-
-            h1 {
-                page-break-before: always;
-            }
-
-            .info-box, .warning-box, .tip-box {
-                break-inside: avoid;
-            }
+            body { max-width: none; }
+            .title-page { page-break-after: always; }
+            h1 { page-break-before: always; }
         }
     </style>
 </head>
 <body>
 
-<!-- Title Page -->
 <div class="title-page">
     <h1>StimuPop</h1>
-    <div class="subtitle">Excel to PowerPoint Converter</div>
-    <div class="guide-label">USER GUIDE</div>
-    <div class="version-box">Version 6.2.0</div>
+    <p class="subtitle">Excel to PowerPoint Converter</p>
+    <p style="font-size: 1.2em; color: var(--secondary-blue); font-weight: bold;">USER GUIDE</p>
+    <p class="version">Version 7.0.0</p>
 </div>
 
-<!-- Table of Contents -->
-<h1>Table of Contents</h1>
 <div class="toc">
-    <div class="toc-item">
-        <span class="toc-num">1.</span>
-        <span class="toc-title"><a href="#introduction">Introduction</a></span>
-        <span class="toc-desc">What is StimuPop?</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">2.</span>
-        <span class="toc-title"><a href="#getting-started">Getting Started</a></span>
-        <span class="toc-desc">Installation and first launch</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">3.</span>
-        <span class="toc-title"><a href="#preparing-excel">Preparing Your Excel File</a></span>
-        <span class="toc-desc">Data structure requirements</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">4.</span>
-        <span class="toc-title"><a href="#using-stimupop">Using StimuPop</a></span>
-        <span class="toc-desc">Step-by-step guide</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">5.</span>
-        <span class="toc-title"><a href="#configuration">Configuration Options</a></span>
-        <span class="toc-desc">Customizing your output</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">6.</span>
-        <span class="toc-title"><a href="#troubleshooting">Troubleshooting</a></span>
-        <span class="toc-desc">Common issues and solutions</span>
-    </div>
-    <div class="toc-item">
-        <span class="toc-num">7.</span>
-        <span class="toc-title"><a href="#quick-reference">Quick Reference</a></span>
-        <span class="toc-desc">Keyboard shortcuts and tips</span>
-    </div>
+    <h2 style="margin-top: 0;">Table of Contents</h2>
+    <ul>
+        <li><a href="#introduction">1. Introduction</a> - What is StimuPop?</li>
+        <li><a href="#getting-started">2. Getting Started</a> - Installation and first launch</li>
+        <li><a href="#preparing-excel">3. Preparing Your Excel File</a> - Data structure requirements</li>
+        <li><a href="#using-stimupop">4. Using StimuPop</a> - Step-by-step guide</li>
+        <li><a href="#configuration">5. Configuration Options</a> - Customizing your output</li>
+        <li><a href="#troubleshooting">6. Troubleshooting</a> - Common issues and solutions</li>
+        <li><a href="#quick-reference">7. Quick Reference</a> - Keyboard shortcuts and tips</li>
+    </ul>
 </div>
 
-<!-- Section 1: Introduction -->
 <h1 id="introduction">1. Introduction</h1>
 
 <h2>What is StimuPop?</h2>
-
 <p><strong>StimuPop</strong> is a powerful yet easy-to-use application that converts Excel spreadsheet data into professional PowerPoint presentations. It's designed to save you hours of manual work by automatically:</p>
-
-<ul class="feature-list">
+<ul class="features">
     <li>Extracting embedded images from Excel cells</li>
     <li>Creating individual slides for each data row</li>
     <li>Uniform image sizing with multiple sizing modes</li>
@@ -394,522 +104,321 @@
     <li>Supporting both portrait and landscape orientations</li>
     <li>Handling errors gracefully (missing images won't stop the process)</li>
 </ul>
-
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     StimuPop is perfect for creating product catalogs, photo albums, training materials, and any presentation where each slide follows the same format.
 </div>
 
-<!-- Section 2: Getting Started -->
 <h1 id="getting-started">2. Getting Started</h1>
 
 <h2>Installation (Portable Version)</h2>
-
 <p>The portable version requires no installation. Simply follow these steps:</p>
-
-<div class="step-table">
-    <div class="step-row">
-        <div class="step-num">1</div>
-        <div class="step-text">Extract the ZIP file to any folder on your computer</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">2</div>
-        <div class="step-text">Open the extracted folder</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">3</div>
-        <div class="step-text">Double-click 'StimuPop.exe' (or 'StimuPop.bat') to launch the application</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">4</div>
-        <div class="step-text">Wait for the terminal window to display 'Server ready!' message</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">5</div>
-        <div class="step-text">Hold Ctrl and click the localhost link in the terminal, OR copy the URL and paste it into your browser</div>
-    </div>
-</div>
-
+<table class="step-table">
+    <tr><td class="step-num">1</td><td>Extract the ZIP file to any folder on your computer</td></tr>
+    <tr><td class="step-num">2</td><td>Open the extracted folder</td></tr>
+    <tr><td class="step-num">3</td><td>Double-click 'StimuPop.exe' (or 'StimuPop.bat') to launch the application</td></tr>
+    <tr><td class="step-num">4</td><td>Wait for the terminal window to display 'Server ready!' message</td></tr>
+    <tr><td class="step-num">5</td><td>Hold Ctrl and click the localhost link in the terminal, OR copy the URL and paste it into your browser</td></tr>
+</table>
 <div class="info-box">
-    <div class="title">First Launch</div>
+    <strong>First Launch</strong>
     The first time you run StimuPop, the server may take 30-60 seconds to start. Wait for the 'Server ready!' message before clicking the link. Subsequent launches will be faster.
 </div>
 
 <h2>System Requirements</h2>
-
 <table>
-    <tr>
-        <th>Requirement</th>
-        <th>Specification</th>
-    </tr>
-    <tr>
-        <td><strong>Operating System</strong></td>
-        <td>Windows 10 or later (64-bit)</td>
-    </tr>
-    <tr>
-        <td><strong>Disk Space</strong></td>
-        <td>~300 MB for portable version</td>
-    </tr>
-    <tr>
-        <td><strong>Memory</strong></td>
-        <td>4 GB RAM minimum</td>
-    </tr>
-    <tr>
-        <td><strong>Browser</strong></td>
-        <td>Chrome, Firefox, or Edge (latest version)</td>
-    </tr>
+    <tr><th>Requirement</th><th>Specification</th></tr>
+    <tr><td><strong>Operating System</strong></td><td>Windows 10 or later (64-bit)</td></tr>
+    <tr><td><strong>Disk Space</strong></td><td>~300 MB for portable version</td></tr>
+    <tr><td><strong>Memory</strong></td><td>4 GB RAM minimum</td></tr>
+    <tr><td><strong>Browser</strong></td><td>Chrome, Firefox, or Edge (latest version)</td></tr>
 </table>
 
-<!-- Section 3: Preparing Your Excel File -->
 <h1 id="preparing-excel">3. Preparing Your Excel File</h1>
-
 <p>For best results, structure your Excel file as follows:</p>
 
 <h2>Recommended Structure</h2>
-
 <table>
-    <tr>
-        <th>Column A<br>(Skip)</th>
-        <th>Column B<br>(Image)</th>
-        <th>Column C<br>(Title)</th>
-        <th>Column D<br>(Description)</th>
-    </tr>
-    <tr>
-        <td>ID-001</td>
-        <td>[Image 1]</td>
-        <td>Product One</td>
-        <td>Description of product one</td>
-    </tr>
-    <tr>
-        <td>ID-002</td>
-        <td>[Image 2]</td>
-        <td>Product Two</td>
-        <td>Description of product two</td>
-    </tr>
-    <tr>
-        <td>ID-003</td>
-        <td>[Image 3]</td>
-        <td>Product Three</td>
-        <td>Description of product three</td>
-    </tr>
+    <tr><th>Column A<br>(Skip)</th><th>Column B<br>(Image)</th><th>Column C<br>(Title)</th><th>Column D<br>(Description)</th></tr>
+    <tr><td>ID-001</td><td>[Image 1]</td><td>Product One</td><td>Description of product one</td></tr>
+    <tr><td>ID-002</td><td>[Image 2]</td><td>Product Two</td><td>Description of product two</td></tr>
+    <tr><td>ID-003</td><td>[Image 3]</td><td>Product Three</td><td>Description of product three</td></tr>
 </table>
 
 <h2>Image Options</h2>
-
 <p>StimuPop supports three ways to include images:</p>
-
-<div class="setting-item"><strong>Embedded Images:</strong> Paste images directly into Excel cells. This is the most reliable method.</div>
-<div class="setting-item"><strong>File Paths:</strong> Enter the full path to an image file (e.g., C:\Images\photo.jpg)</div>
-<div class="setting-item"><strong>URLs:</strong> Enter a web URL to an image (e.g., https://example.com/image.png)</div>
-
+<ul>
+    <li><strong>Embedded Images:</strong> Paste images directly into Excel cells. This is the most reliable method.</li>
+    <li><strong>File Paths:</strong> Enter the full path to an image file (e.g., C:\Images\photo.jpg)</li>
+    <li><strong>URLs:</strong> Enter a web URL to an image (e.g., https://example.com/image.png)</li>
+</ul>
 <div class="warning-box">
-    <div class="title">Important</div>
+    <strong>Important</strong>
     Images embedded directly in Excel cells provide the most consistent results. File paths must be accessible from the computer running StimuPop.
 </div>
 
 <h2>Column Flexibility</h2>
-
 <p>Your Excel file can have any number of columns. StimuPop is flexible about your data structure:</p>
-
-<ul class="bullet-list">
+<ul>
     <li>Add as many text columns as you need (C, D, E, F, G, etc.)</li>
     <li>Skip columns you do not want to include in the presentation</li>
     <li>Use column letters (B, C, D) or column header names (Image, Title, Description)</li>
     <li>Columns can be in any order - just specify the correct references</li>
     <li>Empty cells are handled gracefully (no errors for missing data)</li>
 </ul>
-
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     You only need to specify the columns you want to use. StimuPop ignores all other columns in your Excel file.
 </div>
 
-<!-- Section 4: Using StimuPop -->
 <h1 id="using-stimupop">4. Using StimuPop</h1>
 
 <h2>Step-by-Step Guide</h2>
-
-<div class="step-table">
-    <div class="step-row">
-        <div class="step-num">1</div>
-        <div class="step-text">Launch StimuPop by double-clicking 'StimuPop.exe' and wait for 'Server ready!'</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">2</div>
-        <div class="step-text">Ctrl+click the localhost link (or copy/paste into browser)</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">3</div>
-        <div class="step-text">Click 'Browse files' under 'Upload Excel File' and select your .xlsx file</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">4</div>
-        <div class="step-text">Optionally upload a PowerPoint template for custom styling</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">5</div>
-        <div class="step-text">Set the Image Column (e.g., 'B' or the column header name)</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">6</div>
-        <div class="step-text">Set the Text Columns (e.g., 'C,D,E,F' for multiple columns)</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">7</div>
-        <div class="step-text">Adjust font size using the slider (default: 14pt)</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">8</div>
-        <div class="step-text">Click the blue 'Generate Presentation' button</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">9</div>
-        <div class="step-text">Wait for processing (progress bar shows status)</div>
-    </div>
-    <div class="step-row">
-        <div class="step-num">10</div>
-        <div class="step-text">Click 'Download Presentation' to save your .pptx file</div>
-    </div>
-</div>
+<table class="step-table">
+    <tr><td class="step-num">1</td><td>Launch StimuPop by double-clicking 'StimuPop.exe' and wait for 'Server ready!'</td></tr>
+    <tr><td class="step-num">2</td><td>Ctrl+click the localhost link (or copy/paste into browser)</td></tr>
+    <tr><td class="step-num">3</td><td>Click 'Browse files' under 'Upload Excel File' and select your .xlsx file</td></tr>
+    <tr><td class="step-num">4</td><td>Optionally upload a PowerPoint template for custom styling</td></tr>
+    <tr><td class="step-num">5</td><td>Set the Image Column (e.g., 'B' or the column header name)</td></tr>
+    <tr><td class="step-num">6</td><td>Set the Text Columns (e.g., 'C,D,E,F' for multiple columns)</td></tr>
+    <tr><td class="step-num">7</td><td>Adjust font size using the slider (default: 14pt)</td></tr>
+    <tr><td class="step-num">8</td><td>Click the blue 'Generate Presentation' button</td></tr>
+    <tr><td class="step-num">9</td><td>Wait for processing (progress bar shows status)</td></tr>
+    <tr><td class="step-num">10</td><td>Click 'Download Presentation' to save your .pptx file</td></tr>
+</table>
 
 <h2>Understanding the Interface</h2>
-
 <p>The StimuPop interface is divided into several sections:</p>
+<ul>
+    <li><strong>Upload Files:</strong> Where you select your Excel file and optional PowerPoint template</li>
+    <li><strong>Configuration:</strong> Basic settings like image column, text columns, and font size</li>
+    <li><strong>Advanced Settings:</strong> Layout options and per-column formatting (click to expand)</li>
+    <li><strong>Data Preview:</strong> Shows a preview of your Excel data before generation</li>
+    <li><strong>Generate Button:</strong> Starts the presentation generation process</li>
+</ul>
 
-<div class="setting-item"><strong>Upload Files:</strong> Where you select your Excel file and optional PowerPoint template</div>
-<div class="setting-item"><strong>Configuration:</strong> Basic settings like image column, text columns, and font size</div>
-<div class="setting-item"><strong>Advanced Settings:</strong> Layout options and per-column formatting (click to expand)</div>
-<div class="setting-item"><strong>Data Preview:</strong> Shows a preview of your Excel data before generation</div>
-<div class="setting-item"><strong>Generate Button:</strong> Starts the presentation generation process</div>
-
-<!-- Section 5: Configuration Options -->
 <h1 id="configuration">5. Configuration Options</h1>
 
 <h2>Basic Settings</h2>
-
 <table>
-    <tr>
-        <th>Setting</th>
-        <th>Description</th>
-        <th>Default</th>
-    </tr>
-    <tr>
-        <td><strong>Image Column</strong></td>
-        <td>Letter (A-Z) or name of the column containing images</td>
-        <td>B</td>
-    </tr>
-    <tr>
-        <td><strong>Text Columns</strong></td>
-        <td>Comma-separated list of columns for text content</td>
-        <td>C,D,E,F</td>
-    </tr>
-    <tr>
-        <td><strong>Font Size</strong></td>
-        <td>Default font size for all text (8-48pt)</td>
-        <td>14</td>
-    </tr>
-    <tr>
-        <td><strong>Pictures Only</strong></td>
-        <td>Skip all text columns and create image-only slides</td>
-        <td>Off</td>
-    </tr>
+    <tr><th>Setting</th><th>Description</th><th>Default</th></tr>
+    <tr><td><strong>Image Column</strong></td><td>Letter (A-Z) or name of the column containing images</td><td>B</td></tr>
+    <tr><td><strong>Text Columns</strong></td><td>Comma-separated list of columns for text content</td><td>C,D,E,F</td></tr>
+    <tr><td><strong>Font Size</strong></td><td>Default font size for all text (8-48pt)</td><td>14</td></tr>
+    <tr><td><strong>Pictures Only</strong></td><td>Skip all text columns and create image-only slides</td><td>Off</td></tr>
 </table>
 
-<h3>Pictures Only Mode (New in v6.2)</h3>
-
+<h3>Pictures Only Mode</h3>
 <p>Enable 'Pictures Only (no text)' checkbox to create image-only slideshows:</p>
-
-<ul class="bullet-list">
+<ul>
     <li>Photo albums and image galleries</li>
     <li>Product image catalogs without descriptions</li>
     <li>Visual presentations where text is unnecessary</li>
     <li>Quick image slideshows from Excel collections</li>
 </ul>
-
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     When Pictures Only mode is enabled, the Text Columns setting is ignored. Only the Image Column is used to create slides.
 </div>
 
 <h2>Advanced Settings</h2>
-
 <p>Click 'Advanced Settings' to access template mode, layout, image sizing, text spacing, and alignment options:</p>
 
 <h3>Template Mode</h3>
-
 <p>StimuPop offers two generation modes for creating slides:</p>
+<ul>
+    <li><strong>Blank Mode (default):</strong> Creates slides from scratch with configurable layout. You control image position, text position, fonts, and colors. Best for new presentations or when you need full control over styling.</li>
+    <li><strong>Template Mode:</strong> Uses an existing PowerPoint template slide as the base. StimuPop clones the template for each row and populates placeholders with your data. Best when you have an existing design you want to preserve exactly.</li>
+</ul>
 
-<div class="setting-item"><strong>Blank Mode (default):</strong> Creates slides from scratch with configurable layout. You control image position, text position, fonts, and colors. Best for new presentations or when you need full control over styling.</div>
-
-<div class="setting-item"><strong>Template Mode:</strong> Uses an existing PowerPoint template slide as the base. StimuPop clones the template for each row and populates placeholders with your data. Best when you have an existing design you want to preserve exactly.</div>
-
+<h3>Template Mode Enhancement (v7.0)</h3>
+<p>Version 7.0 introduces dynamic column mapping for Template Mode:</p>
+<ul>
+    <li>Template Mode now automatically maps your Excel columns to template paragraphs</li>
+    <li>Works with any column letters (A, B, C or custom names)</li>
+    <li>Empty paragraphs in your template are preserved as spacers</li>
+    <li>No longer limited to specific column configurations</li>
+</ul>
+<div class="tip-box">
+    <strong>v7.0 Enhancement</strong>
+    Dynamic column mapping - your columns are automatically matched to non-empty paragraphs in your template, regardless of which column letters you use. This means you can use columns B and C, or D and E, or any combination that fits your data structure.
+</div>
 <div class="info-box">
-    <div class="title">Template Mode Settings</div>
+    <strong>Template Mode Settings</strong>
     When using Template Mode:<br>
     - Upload a .pptx template with your desired slide design<br>
     - Specify the Image Placeholder Name (shape containing the image)<br>
     - Specify the Text Placeholder Name (shape containing text)<br>
-    - StimuPop preserves all template formatting (fonts, sizes, colors)
+    - StimuPop preserves all template formatting (fonts, sizes, colors)<br>
+    - Your columns are dynamically mapped to non-empty template paragraphs
 </div>
 
 <h3>Image Sizing</h3>
-
 <p>Control how images are sized uniformly across all slides. These settings work in both Blank and Template modes:</p>
-
 <table>
-    <tr>
-        <th>Size Mode</th>
-        <th>Description</th>
-    </tr>
-    <tr>
-        <td><strong>Fit to Box (Recommended)</strong></td>
-        <td>Images scale to fit within Max Width and Max Height while maintaining aspect ratio. All images appear uniform.</td>
-    </tr>
-    <tr>
-        <td><strong>Fit Width Only</strong></td>
-        <td>Images have fixed width, height adjusts automatically based on aspect ratio.</td>
-    </tr>
-    <tr>
-        <td><strong>Fit Height Only</strong></td>
-        <td>Images have fixed height, width adjusts automatically based on aspect ratio.</td>
-    </tr>
-    <tr>
-        <td><strong>Stretch to Exact Size</strong></td>
-        <td>Images are forced to exact dimensions. May distort images.</td>
-    </tr>
+    <tr><th>Size Mode</th><th>Description</th></tr>
+    <tr><td><strong>Fit to Box (Recommended)</strong></td><td>Images scale to fit within Max Width and Max Height while maintaining aspect ratio. All images appear uniform.</td></tr>
+    <tr><td><strong>Fit Width Only</strong></td><td>Images have fixed width, height adjusts automatically based on aspect ratio.</td></tr>
+    <tr><td><strong>Fit Height Only</strong></td><td>Images have fixed height, width adjusts automatically based on aspect ratio.</td></tr>
+    <tr><td><strong>Stretch to Exact Size</strong></td><td>Images are forced to exact dimensions. May distort images.</td></tr>
 </table>
-
-<p>Image dimension sliders (updated in v6.2):</p>
-<div class="setting-item"><strong>Max Width:</strong> 0.0 - 9.0 inches (0 allows thumbnail-sized images)</div>
-<div class="setting-item"><strong>Max Height:</strong> 0.0 - 7.0 inches (0 allows thumbnail-sized images)</div>
-
+<p>Image dimension sliders:</p>
+<ul>
+    <li><strong>Max Width:</strong> 0.0 - 9.0 inches (0 allows thumbnail-sized images)</li>
+    <li><strong>Max Height:</strong> 0.0 - 7.0 inches (0 allows thumbnail-sized images)</li>
+</ul>
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     Use 'Fit to Box' mode for product catalogs and photo albums where you want all images to appear the same size regardless of their original dimensions.
 </div>
 
 <h3>Layout Position (Blank Mode Only)</h3>
-
 <p>These settings control slide layout and are only available when using Blank slide mode (not Template mode):</p>
-
-<div class="setting-item"><strong>Image Top Position:</strong> Distance from top of slide to image (Default: 0.5 inches)</div>
-<div class="setting-item"><strong>Text Top Position:</strong> Distance from top of slide to text area (0.0-9.0 inches) (Default: 5.0 inches)</div>
-<div class="setting-item"><strong>Slide Orientation:</strong> Portrait (tall) or Landscape (wide) (Default: Portrait)</div>
+<ul>
+    <li><strong>Image Top Position:</strong> Distance from top of slide to image (Default: 0.5 inches)</li>
+    <li><strong>Text Top Position:</strong> Distance from top of slide to text area, 0.0-9.0 inches (Default: 5.0 inches)</li>
+    <li><strong>Slide Orientation:</strong> Portrait (tall) or Landscape (wide) (Default: Portrait)</li>
+</ul>
 
 <h3>Image Alignment (Blank Mode Only)</h3>
-
 <p>Control how images are positioned within their bounding box. These settings only apply to Blank mode:</p>
-
 <table>
-    <tr>
-        <th>Alignment Type</th>
-        <th>Options</th>
-    </tr>
-    <tr>
-        <td><strong>Vertical Alignment</strong></td>
-        <td>Top, Center (default), Bottom</td>
-    </tr>
-    <tr>
-        <td><strong>Horizontal Alignment</strong></td>
-        <td>Left, Center (default), Right</td>
-    </tr>
+    <tr><th>Alignment Type</th><th>Options</th></tr>
+    <tr><td><strong>Vertical Alignment</strong></td><td>Top, Center (default), Bottom</td></tr>
+    <tr><td><strong>Horizontal Alignment</strong></td><td>Left, Center (default), Right</td></tr>
 </table>
-
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     Use 'Bottom' vertical alignment for variety cards where you want images anchored to the bottom of the image area, regardless of image height.
 </div>
 
 <h3>Text Spacing</h3>
-
 <p>Control spacing and overflow behavior for text content:</p>
-
-<div class="setting-item"><strong>Paragraph Spacing:</strong> Space after each paragraph (0-24pt). Default 0pt means no extra spacing between lines.</div>
-<div class="setting-item"><strong>Text Overflow:</strong> How text boxes handle content that exceeds the box size:</div>
-
-<ul class="bullet-list" style="margin-left: 30px;">
-    <li><strong>Resize shape to fit text (default):</strong> The text box expands to fit all content. Text remains at original size.</li>
-    <li><strong>Shrink text on overflow:</strong> Text automatically shrinks to fit within the text box boundaries.</li>
+<ul>
+    <li><strong>Paragraph Spacing:</strong> Space after each paragraph (0-24pt). Default 0pt means no extra spacing between lines.</li>
+    <li><strong>Text Overflow:</strong> How text boxes handle content that exceeds the box size:
+        <ul>
+            <li><strong>Resize shape to fit text (default):</strong> The text box expands to fit all content. Text remains at original size.</li>
+            <li><strong>Shrink text on overflow:</strong> Text automatically shrinks to fit within the text box boundaries.</li>
+        </ul>
+    </li>
 </ul>
-
 <div class="info-box">
-    <div class="title">Text Overflow (New in v6.2)</div>
+    <strong>Text Overflow</strong>
     The Text Overflow dropdown gives you control over how StimuPop handles long text that exceeds the text box. 'Resize shape to fit text' keeps text readable but may extend beyond the slide. 'Shrink text on overflow' keeps text within bounds but may make it smaller.
 </div>
 
-<h3>Advanced Positioning (New in v6.0)</h3>
-
+<h3>Advanced Positioning</h3>
 <p>For precise control over text column placement, enable 'Advanced Positioning' by checking the checkbox in Advanced Settings. This reveals per-column position controls:</p>
-
-<div class="setting-item"><strong>Auto (default):</strong> Text flows sequentially after the previous column. Position depends on content length of earlier columns.</div>
-<div class="setting-item"><strong>Fixed:</strong> Text is placed at an exact position on the slide, regardless of other content. Creates a separate text box.</div>
-
+<ul>
+    <li><strong>Auto (default):</strong> Text flows sequentially after the previous column. Position depends on content length of earlier columns.</li>
+    <li><strong>Fixed:</strong> Text is placed at an exact position on the slide, regardless of other content. Creates a separate text box.</li>
+</ul>
 <p>Default fixed positions (useful for variety cards):</p>
-<div class="setting-item"><strong>Column E:</strong> 5.0 inches from top</div>
-<div class="setting-item"><strong>Column F:</strong> 6.5 inches from top</div>
-
+<ul>
+    <li><strong>Column E:</strong> 5.0 inches from top</li>
+    <li><strong>Column F:</strong> 6.5 inches from top</li>
+</ul>
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     Use Fixed positioning for columns E and F when you want them to appear in the same location on every slide, even if the Brand (C) and Product Name (D) vary in length.
 </div>
 
 <h3>Per-Column Formatting (Blank Mode Only)</h3>
-
 <p>When using Blank mode, you can customize each text column individually in Advanced Settings:</p>
-
-<ul class="bullet-list">
-    <li>Font size (8-48pt, expanded range in v6.2)</li>
+<ul>
+    <li>Font size (8-48pt)</li>
     <li>Font family (Calibri, Arial, Times New Roman, etc.)</li>
     <li>Text color (color picker)</li>
     <li>Bold and Italic styles</li>
 </ul>
-
 <div class="tip-box">
-    <div class="title">Tip</div>
+    <strong>Tip</strong>
     Use larger, bold fonts for titles (Column C) and smaller regular fonts for descriptions (Column D) to create visual hierarchy.
 </div>
 
-<!-- Section 6: Troubleshooting -->
 <h1 id="troubleshooting">6. Troubleshooting</h1>
 
-<div class="issue">
-    <div class="issue-title">Application won't start</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Ensure you extracted all files from the ZIP</li>
-            <li>Run as Administrator (right-click - Run as administrator)</li>
-            <li>Check that antivirus isn't blocking the application</li>
-        </ul>
-    </div>
-</div>
+<h3>Application won't start</h3>
+<ul>
+    <li>Ensure you extracted all files from the ZIP</li>
+    <li>Run as Administrator (right-click -> Run as administrator)</li>
+    <li>Check that antivirus isn't blocking the application</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">Browser doesn't open automatically</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Wait for 'Server ready!' message in the terminal window</li>
-            <li>Hold Ctrl and click the localhost link, or copy/paste the URL</li>
-            <li>Manually open your browser and go to: http://localhost:8501</li>
-            <li>Try a different browser (Chrome recommended)</li>
-        </ul>
-    </div>
-</div>
+<h3>Browser doesn't open automatically</h3>
+<ul>
+    <li>Wait for 'Server ready!' message in the terminal window</li>
+    <li>Hold Ctrl and click the localhost link, or copy/paste the URL</li>
+    <li>Manually open your browser and go to: http://localhost:8501</li>
+    <li>Try a different browser (Chrome recommended)</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">'Column not found' error</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Check that your column letter/name matches exactly</li>
-            <li>Column letters are case-insensitive (B = b)</li>
-            <li>Column names ARE case-sensitive</li>
-        </ul>
-    </div>
-</div>
+<h3>'Column not found' error</h3>
+<ul>
+    <li>Check that your column letter/name matches exactly</li>
+    <li>Column letters are case-insensitive (B = b)</li>
+    <li>Column names ARE case-sensitive</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">Images not appearing on slides</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Ensure images are embedded in cells, not floating</li>
-            <li>Check file paths are correct and accessible</li>
-            <li>Verify image files are JPG, PNG, or GIF format</li>
-        </ul>
-    </div>
-</div>
+<h3>Images not appearing on slides</h3>
+<ul>
+    <li>Ensure images are embedded in cells, not floating</li>
+    <li>Check file paths are correct and accessible</li>
+    <li>Verify image files are JPG, PNG, or GIF format</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">Presentation generation is slow</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Large images take longer to process</li>
-            <li>Consider resizing images in Excel before upload</li>
-            <li>Reduce the number of slides if testing</li>
-        </ul>
-    </div>
-</div>
+<h3>Presentation generation is slow</h3>
+<ul>
+    <li>Large images take longer to process</li>
+    <li>Consider resizing images in Excel before upload</li>
+    <li>Reduce the number of slides if testing</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">Text formatting not applied</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Ensure you configured formatting in Advanced Settings</li>
-            <li>Check that column letters in formatting match your data</li>
-        </ul>
-    </div>
-</div>
+<h3>Text formatting not applied</h3>
+<ul>
+    <li>Ensure you configured formatting in Advanced Settings</li>
+    <li>Check that column letters in formatting match your data</li>
+</ul>
 
-<div class="issue">
-    <div class="issue-title">Images are different sizes on slides</div>
-    <div class="issue-solution">
-        <ul class="bullet-list">
-            <li>Open Advanced Settings and set Size Mode to 'Fit to Box'</li>
-            <li>Adjust Max Width and Max Height to your desired dimensions</li>
-            <li>All images will now scale uniformly</li>
-        </ul>
-    </div>
-</div>
+<h3>Images are different sizes on slides</h3>
+<ul>
+    <li>Open Advanced Settings and set Size Mode to 'Fit to Box'</li>
+    <li>Adjust Max Width and Max Height to your desired dimensions</li>
+    <li>All images will now scale uniformly</li>
+</ul>
 
-<!-- Section 7: Quick Reference -->
 <h1 id="quick-reference">7. Quick Reference</h1>
 
 <h2>Column Reference Cheat Sheet</h2>
-
 <table>
-    <tr>
-        <th>Reference Type</th>
-        <th>Example</th>
-    </tr>
-    <tr>
-        <td>Single letter</td>
-        <td><code>B</code></td>
-    </tr>
-    <tr>
-        <td>Multiple letters</td>
-        <td><code>C,D,E,F</code></td>
-    </tr>
-    <tr>
-        <td>Column name</td>
-        <td><code>Title</code></td>
-    </tr>
-    <tr>
-        <td>Mixed</td>
-        <td><code>B,Title,Description</code></td>
-    </tr>
-    <tr>
-        <td>With spaces</td>
-        <td><code>"Product Name"</code></td>
-    </tr>
+    <tr><th>Reference Type</th><th>Example</th></tr>
+    <tr><td>Single letter</td><td><code>B</code></td></tr>
+    <tr><td>Multiple letters</td><td><code>C,D,E,F</code></td></tr>
+    <tr><td>Column name</td><td><code>Title</code></td></tr>
+    <tr><td>Mixed</td><td><code>B,Title,Description</code></td></tr>
+    <tr><td>With spaces</td><td><code>"Product Name"</code></td></tr>
 </table>
 
 <h2>Keyboard Shortcuts</h2>
-
-<div class="shortcut">
-    <span class="shortcut-key">Ctrl + C</span>
-    <span>Stop the application (in command window)</span>
-</div>
-
-<div class="shortcut">
-    <span class="shortcut-key">F5</span>
-    <span>Refresh the browser page</span>
-</div>
-
-<div class="shortcut">
-    <span class="shortcut-key">Ctrl + S</span>
-    <span>Save downloaded file (in browser)</span>
-</div>
+<table>
+    <tr><th>Shortcut</th><th>Action</th></tr>
+    <tr><td><code>Ctrl + C</code></td><td>Stop the application (in command window)</td></tr>
+    <tr><td><code>F5</code></td><td>Refresh the browser page</td></tr>
+    <tr><td><code>Ctrl + S</code></td><td>Save downloaded file (in browser)</td></tr>
+</table>
 
 <div class="info-box">
-    <div class="title">Need Help?</div>
+    <strong>Need Help?</strong>
     If you encounter issues not covered in this guide, please contact your system administrator or the development team with:<br>
     - A description of the problem<br>
     - The exact error message (if any)<br>
     - Your Excel file (if possible)
 </div>
 
-<!-- Final Page -->
-<div class="final-page">
-    <h2>Thank you for using StimuPop!</h2>
-    <div class="version">Version 6.2.0</div>
+<div style="text-align: center; margin-top: 60px; padding: 40px;">
+    <p style="font-size: 1.3em; color: var(--primary-blue); font-weight: bold;">Thank you for using StimuPop!</p>
+    <p style="color: var(--text-gray);">Version 7.0.0</p>
 </div>
 
 </body>
