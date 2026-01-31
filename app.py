@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 6.1.0
+Version: 6.2.0
 """
 
 import tempfile
@@ -61,7 +61,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v6.1",
+    page_title="StimuPop v6.2",
     page_icon="🎯",
     layout="wide"
 )
@@ -76,7 +76,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v6.1")
+    st.title("🎯 StimuPop v6.2")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -89,13 +89,14 @@ def render_app():
 
     with col2:
         st.subheader("⚙️ Configuration")
-        img_column, text_columns, font_size = render_basic_config()
+        img_column, text_columns, font_size, pictures_only = render_basic_config()
 
     # Advanced settings
     (img_width, img_height, img_size_mode, img_top, text_top, orientation,
      column_formats, paragraph_spacing, template_mode,
      image_placeholder_name, text_placeholder_name,
-     img_v_align, img_h_align, column_positions) = render_advanced_settings(text_columns, font_size)
+     img_v_align, img_h_align, column_positions,
+     text_overflow_mode) = render_advanced_settings(text_columns, font_size)
 
     st.markdown("---")
 
@@ -129,7 +130,8 @@ def render_app():
         text_placeholder_name=text_placeholder_name,
         img_v_align=img_v_align,
         img_h_align=img_h_align,
-        column_positions=column_positions
+        column_positions=column_positions,
+        text_overflow_mode=text_overflow_mode
     )
 
     # Instructions
@@ -166,21 +168,33 @@ def render_basic_config():
         help="Column letter or name containing embedded images or file paths (e.g., 'B' or 'Image')"
     )
 
-    text_columns = st.text_input(
-        "Text Columns (comma-separated)",
-        "C,D,E,F",
-        help="Column letters or names for text content (e.g., 'C,D,E,F')"
+    # Pictures Only mode (NEW in v6.2)
+    pictures_only = st.checkbox(
+        "Pictures Only (no text)",
+        value=False,
+        help="Generate slides with images only, skip text columns"
     )
 
-    font_size = st.slider(
-        "Font Size (pt)",
-        min_value=8,
-        max_value=48,
-        value=14,
-        help="Default font size for text content (used in Blank mode)"
-    )
+    if pictures_only:
+        text_columns = ""
+        font_size = 14
+        st.info("📷 Pictures Only mode: Slides will contain images without text")
+    else:
+        text_columns = st.text_input(
+            "Text Columns (comma-separated)",
+            "C,D,E,F",
+            help="Column letters or names for text content (e.g., 'C,D,E,F')"
+        )
 
-    return img_column, text_columns, font_size
+        font_size = st.slider(
+            "Font Size (pt)",
+            min_value=8,
+            max_value=48,
+            value=14,
+            help="Default font size for text content (used in Blank mode)"
+        )
+
+    return img_column, text_columns, font_size, pictures_only
 
 
 def render_advanced_settings(text_columns_str: str, default_font_size: int):
@@ -246,6 +260,14 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
             value=0.0,
             step=1.0,
             help="Space after each text paragraph (0 = no extra spacing between columns)"
+        )
+
+        # Text Overflow Handling (NEW in v6.2)
+        text_overflow_mode = st.selectbox(
+            "Text Overflow",
+            options=["Resize shape to fit text", "Shrink text on overflow"],
+            index=0,
+            help="How to handle text that exceeds the text box size"
         )
 
         st.markdown("---")
@@ -415,7 +437,8 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
     return (img_width, img_height, img_size_mode, img_top, text_top, orientation,
             column_formats, paragraph_spacing, template_mode,
             image_placeholder_name, text_placeholder_name,
-            img_v_align_value, img_h_align_value, column_positions)
+            img_v_align_value, img_h_align_value, column_positions,
+            text_overflow_mode)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -578,7 +601,8 @@ def render_generate_section(
     text_placeholder_name,
     img_v_align,
     img_h_align,
-    column_positions
+    column_positions,
+    text_overflow_mode
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -614,7 +638,8 @@ def render_generate_section(
             text_placeholder_name=text_placeholder_name,
             img_v_align=img_v_align,
             img_h_align=img_h_align,
-            column_positions=column_positions
+            column_positions=column_positions,
+            text_overflow_mode=text_overflow_mode
         )
 
 
@@ -638,7 +663,8 @@ def generate_presentation(
     text_placeholder_name,
     img_v_align,
     img_h_align,
-    column_positions
+    column_positions,
+    text_overflow_mode
 ):
     """Generate the PowerPoint presentation."""
     logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
@@ -690,6 +716,10 @@ def generate_presentation(
                     left=pos.get("left", 0.5)
                 )
 
+        # Map text overflow mode to python-pptx constant
+        # "Resize shape to fit text" = None (default), "Shrink text on overflow" = "shrink"
+        overflow_mode = "shrink" if text_overflow_mode == "Shrink text on overflow" else None
+
         # Create slide configuration with per-column formats
         config = SlideConfig(
             img_column=resolved_img,
@@ -707,7 +737,8 @@ def generate_presentation(
             image_placeholder_name=image_placeholder_name,
             text_placeholder_name=text_placeholder_name,
             image_alignment=image_alignment,
-            column_positions=col_positions
+            column_positions=col_positions,
+            text_overflow_mode=overflow_mode
         )
 
         # Get template bytes if provided
@@ -846,7 +877,7 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v6.1.0 | "
+        "🎯 StimuPop v6.2.0 |"
         "Image Alignment + Fixed Positioning | "
         "Built with Streamlit"
         "</p>",

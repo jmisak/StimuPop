@@ -3,2070 +3,914 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StimuPop User Guide - Version 6.1.0</title>
+    <title>StimuPop User Guide - Version 6.2.0</title>
     <style>
-        /* CSS Reset and Base Styles */
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         :root {
-            --primary-blue: #1a56db;
-            --primary-blue-light: #3b82f6;
-            --primary-blue-dark: #1e40af;
-            --accent-cyan: #06b6d4;
-            --accent-cyan-light: #22d3ee;
-            --info-bg: #dbeafe;
-            --info-border: #1a56db;
-            --warning-bg: #fef3c7;
-            --warning-border: #d97706;
-            --tip-bg: #d1fae5;
-            --tip-border: #059669;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            --success-green: #10b981;
-            --white: #ffffff;
-            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-color: #2E74B5;
+            --secondary-color: #4472C4;
+            --text-gray: #666666;
+            --light-bg: #E7F3FF;
+            --success-green: #28A745;
+            --warning-yellow: #FFF3CD;
+            --warning-border: #856404;
+            --tip-green: #D4EDDA;
+            --tip-border: #155724;
+            --table-alt: #F8F9FA;
         }
 
-        /* Dark Mode Variables */
-        .dark-mode {
-            --primary-blue: #60a5fa;
-            --primary-blue-light: #93c5fd;
-            --primary-blue-dark: #3b82f6;
-            --accent-cyan: #22d3ee;
-            --accent-cyan-light: #67e8f9;
-            --info-bg: #1e3a5f;
-            --info-border: #60a5fa;
-            --warning-bg: #78350f;
-            --warning-border: #fbbf24;
-            --tip-bg: #064e3b;
-            --tip-border: #34d399;
-            --gray-50: #111827;
-            --gray-100: #1f2937;
-            --gray-200: #374151;
-            --gray-300: #4b5563;
-            --gray-400: #6b7280;
-            --gray-500: #9ca3af;
-            --gray-600: #d1d5db;
-            --gray-700: #e5e7eb;
-            --gray-800: #f3f4f6;
-            --gray-900: #f9fafb;
-            --white: #1f2937;
-        }
-
-        html {
-            scroll-behavior: smooth;
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: var(--font-main);
+            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
             font-size: 16px;
-            line-height: 1.7;
-            color: var(--gray-800);
-            background-color: var(--gray-100);
-            transition: background-color var(--transition-normal), color var(--transition-normal);
-        }
-
-        /* Dark Mode Toggle */
-        .dark-mode-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--white);
-            padding: 8px 16px;
-            border-radius: 50px;
-            box-shadow: var(--shadow-lg);
-            cursor: pointer;
-            transition: all var(--transition-normal);
-            border: 2px solid var(--gray-200);
-        }
-
-        .dark-mode-toggle:hover {
-            transform: scale(1.05);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .dark-mode-toggle input {
-            display: none;
-        }
-
-        .toggle-track {
-            width: 48px;
-            height: 24px;
-            background: var(--gray-300);
-            border-radius: 12px;
-            position: relative;
-            transition: background var(--transition-normal);
-        }
-
-        .toggle-thumb {
-            width: 20px;
-            height: 20px;
-            background: var(--white);
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: transform var(--transition-normal);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .dark-mode-toggle input:checked + .toggle-track {
-            background: var(--primary-blue);
-        }
-
-        .dark-mode-toggle input:checked + .toggle-track .toggle-thumb {
-            transform: translateX(24px);
-        }
-
-        .toggle-icon {
-            font-size: 18px;
-            transition: opacity var(--transition-normal);
-        }
-
-        .toggle-icon.sun { opacity: 1; }
-        .toggle-icon.moon { opacity: 0.5; }
-
-        .dark-mode .toggle-icon.sun { opacity: 0.5; }
-        .dark-mode .toggle-icon.moon { opacity: 1; }
-
-        /* Navigation Sidebar */
-        .nav-sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 300px;
-            height: 100vh;
-            background: linear-gradient(180deg, var(--primary-blue-dark) 0%, #0f172a 100%);
-            padding: 0;
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: var(--shadow-xl);
-        }
-
-        .dark-mode .nav-sidebar {
-            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-        }
-
-        .nav-logo {
-            text-align: center;
-            padding: 30px 20px;
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .nav-logo h1 {
-            color: var(--white);
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .nav-logo h1::before {
-            content: "\26A1";
-            margin-right: 10px;
-        }
-
-        .version-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-blue-light) 100%);
-            color: white;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4);
-        }
-
-        .nav-menu {
-            list-style: none;
-            padding: 20px 0;
-        }
-
-        .nav-menu li {
-            margin: 4px 12px;
-        }
-
-        .nav-menu a {
-            display: flex;
-            align-items: center;
-            padding: 14px 20px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all var(--transition-normal);
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-menu a::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, var(--accent-cyan), transparent);
-            opacity: 0.2;
-            transition: width var(--transition-normal);
-        }
-
-        .nav-menu a:hover {
-            background-color: rgba(255,255,255,0.1);
-            color: var(--white);
-            transform: translateX(5px);
-        }
-
-        .nav-menu a:hover::before {
-            width: 100%;
-        }
-
-        .nav-menu a.active {
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%);
-            color: var(--white);
-            border-left: 3px solid var(--accent-cyan);
-        }
-
-        .nav-menu .section-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 13px;
-            margin-right: 12px;
-            transition: all var(--transition-normal);
-        }
-
-        .nav-menu a:hover .section-number,
-        .nav-menu a.active .section-number {
-            background: var(--accent-cyan);
-            color: var(--gray-900);
-        }
-
-        .nav-menu .nav-icon {
-            margin-right: 10px;
-            font-size: 16px;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 300px;
-            padding: 40px 60px 100px;
-            max-width: 1200px;
-            min-height: 100vh;
-        }
-
-        /* Animation Keyframes */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-            opacity: 0;
-        }
-
-        .animate-fade-in-up {
-            animation: fadeInUp 0.6s ease-out forwards;
-            opacity: 0;
-        }
-
-        .animate-slide-in-left {
-            animation: slideInLeft 0.6s ease-out forwards;
-            opacity: 0;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, var(--primary-blue-dark) 0%, #0f172a 50%, var(--primary-blue) 100%);
-            color: white;
-            text-align: center;
-            padding: 80px 60px;
-            border-radius: 20px;
-            margin-bottom: 40px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow-xl);
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.2) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        .hero::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent 40%,
-                rgba(255,255,255,0.03) 50%,
-                transparent 60%
-            );
-            animation: shimmer 8s infinite linear;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero h1 {
-            color: white;
-            font-size: 56px;
-            font-weight: 800;
-            border: none;
-            padding: 0;
-            margin-bottom: 16px;
-            letter-spacing: -1px;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        .hero h1::before {
-            content: "\26A1";
-            margin-right: 15px;
-            filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.8));
-        }
-
-        .hero .subtitle {
-            font-size: 24px;
-            opacity: 0.9;
-            margin-bottom: 24px;
-            font-weight: 400;
-        }
-
-        .hero .tagline {
-            font-size: 18px;
-            opacity: 0.7;
-            margin-bottom: 30px;
-            font-style: italic;
-        }
-
-        .hero .badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-blue-light) 100%);
-            padding: 10px 28px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-            transition: all var(--transition-normal);
-        }
-
-        .hero .badge:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
-        }
-
-        /* Feature Cards Grid */
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin: 30px 0;
-        }
-
-        .feature-card {
-            background: var(--white);
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--gray-200);
-            transition: all var(--transition-normal);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform var(--transition-normal);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--accent-cyan);
-        }
-
-        .feature-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .feature-card .card-icon {
-            font-size: 36px;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .feature-card h3 {
-            color: var(--gray-800);
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .feature-card p {
-            color: var(--gray-600);
-            font-size: 15px;
             line-height: 1.6;
-            margin: 0;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
         }
 
-        /* Progress Tracker */
-        .progress-tracker {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin: 40px 0;
-            padding: 30px;
-            background: var(--white);
-            border-radius: 16px;
-            box-shadow: var(--shadow-md);
-            overflow-x: auto;
-        }
-
-        .progress-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            flex: 1;
-            position: relative;
-            min-width: 80px;
-        }
-
-        .progress-step:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 60%;
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue-light));
-            opacity: 0.3;
-        }
-
-        .step-circle {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-            transition: all var(--transition-normal);
-        }
-
-        .progress-step:hover .step-circle {
-            transform: scale(1.15);
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
-        }
-
-        .step-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--gray-700);
-            max-width: 80px;
-        }
-
-        /* Section Styling */
-        .section {
-            background: var(--white);
-            padding: 48px;
-            margin-bottom: 32px;
-            border-radius: 20px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--gray-200);
-            transition: all var(--transition-normal);
-        }
-
-        .section:hover {
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* Typography */
         h1 {
-            font-size: 32px;
-            color: var(--primary-blue);
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 3px solid transparent;
-            border-image: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue)) 1;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        h1 .section-icon {
+            color: var(--primary-color);
             font-size: 28px;
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
         }
 
         h2 {
+            color: var(--primary-color);
             font-size: 22px;
-            color: var(--primary-blue);
-            margin-top: 36px;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        h2::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: linear-gradient(180deg, var(--accent-cyan), var(--primary-blue));
-            border-radius: 2px;
+            margin-top: 30px;
         }
 
         h3 {
+            color: var(--secondary-color);
             font-size: 18px;
-            color: var(--gray-700);
-            margin-top: 28px;
-            margin-bottom: 14px;
+            margin-top: 25px;
         }
 
-        p {
-            margin-bottom: 16px;
-            color: var(--gray-700);
-        }
-
-        /* Collapsible/Accordion Sections */
-        .accordion {
-            margin: 20px 0;
-        }
-
-        .accordion-item {
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            overflow: hidden;
-            transition: all var(--transition-normal);
-        }
-
-        .accordion-item:hover {
-            border-color: var(--accent-cyan);
-        }
-
-        .accordion-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 24px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--gray-800);
-            transition: all var(--transition-normal);
-        }
-
-        .accordion-header:hover {
-            background: var(--gray-100);
-        }
-
-        .accordion-icon {
-            font-size: 20px;
-            transition: transform var(--transition-normal);
-        }
-
-        .accordion-item input[type="checkbox"] {
-            display: none;
-        }
-
-        .accordion-item input[type="checkbox"]:checked ~ .accordion-content {
-            max-height: 2000px;
-            padding: 0 24px 24px;
-        }
-
-        .accordion-item input[type="checkbox"]:checked ~ .accordion-header .accordion-icon {
-            transform: rotate(45deg);
-        }
-
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: all var(--transition-slow);
-            padding: 0 24px;
-        }
-
-        /* Feature List */
-        .feature-list {
-            list-style: none;
-            margin: 20px 0;
-        }
-
-        .feature-list li {
-            padding: 14px 0 14px 44px;
-            position: relative;
-            border-bottom: 1px solid var(--gray-100);
-            transition: all var(--transition-fast);
-        }
-
-        .feature-list li:hover {
-            padding-left: 50px;
-            background: var(--gray-50);
-            margin: 0 -20px;
-            padding-right: 20px;
-        }
-
-        .feature-list li:last-child {
-            border-bottom: none;
-        }
-
-        .feature-list li::before {
-            content: "\2713";
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, var(--success-green), #059669);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Info Boxes */
-        .info-box {
-            padding: 24px 28px;
-            border-radius: 12px;
-            margin: 24px 0;
-            border-left: 5px solid;
-            position: relative;
-            overflow: hidden;
-            transition: all var(--transition-normal);
-        }
-
-        .info-box:hover {
-            transform: translateX(5px);
-        }
-
-        .info-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            opacity: 0.05;
-            font-size: 80px;
-        }
-
-        .info-box.info {
-            background: linear-gradient(135deg, var(--info-bg) 0%, rgba(219, 234, 254, 0.5) 100%);
-            border-color: var(--info-border);
-        }
-
-        .info-box.warning {
-            background: linear-gradient(135deg, var(--warning-bg) 0%, rgba(254, 243, 199, 0.5) 100%);
-            border-color: var(--warning-border);
-        }
-
-        .info-box.tip {
-            background: linear-gradient(135deg, var(--tip-bg) 0%, rgba(209, 250, 229, 0.5) 100%);
-            border-color: var(--tip-border);
-        }
-
-        .info-box .box-title {
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .info-box.info .box-title { color: var(--primary-blue); }
-        .info-box.warning .box-title { color: #b45309; }
-        .info-box.tip .box-title { color: #047857; }
-
-        .info-box.info .box-title::before { content: "\2139\FE0F "; }
-        .info-box.warning .box-title::before { content: "\26A0\FE0F "; }
-        .info-box.tip .box-title::before { content: "\1F4A1 "; }
-
-        /* Step Tables */
-        .step-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 24px 0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
-
-        .step-table tr {
-            transition: all var(--transition-fast);
-        }
-
-        .step-table tr:hover {
-            background: var(--gray-50);
-        }
-
-        .step-table .step-number {
-            width: 60px;
-            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
+        .title-page {
             text-align: center;
-            padding: 18px;
-            vertical-align: middle;
+            padding: 60px 0;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 40px;
         }
 
-        .step-table tr:nth-child(even) .step-number {
-            background: linear-gradient(180deg, var(--accent-cyan), #0891b2);
-        }
-
-        .step-table .step-content {
-            padding: 18px 24px;
-            background-color: var(--white);
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .step-table tr:last-child .step-content {
-            border-bottom: none;
-        }
-
-        /* Data Tables */
-        .data-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 24px 0;
-            font-size: 15px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
-
-        .data-table th {
-            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
-            color: white;
-            font-weight: 600;
-            text-align: left;
-            padding: 16px 20px;
-        }
-
-        .data-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--gray-100);
-            background: var(--white);
-            transition: all var(--transition-fast);
-        }
-
-        .data-table tr:hover td {
-            background: var(--gray-50);
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .data-table .setting-name {
-            font-weight: 600;
-            color: var(--gray-800);
-        }
-
-        .data-table .default-value {
-            font-family: var(--font-mono);
-            font-size: 14px;
-            color: var(--accent-cyan);
-            background: var(--gray-100);
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
-
-        /* Code/Technical Styling */
-        code, .code {
-            font-family: var(--font-mono);
-            background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: var(--primary-blue-dark);
-            border: 1px solid var(--gray-200);
-        }
-
-        /* Definition Lists */
-        .def-list {
-            margin: 24px 0;
-        }
-
-        .def-list dt {
-            font-weight: 700;
-            color: var(--gray-800);
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .def-list dt::before {
-            content: '\25B8';
-            color: var(--accent-cyan);
-        }
-
-        .def-list dd {
-            margin-left: 24px;
-            padding-left: 16px;
-            border-left: 3px solid var(--gray-200);
-            margin-top: 8px;
-            color: var(--gray-600);
-        }
-
-        /* Troubleshooting */
-        .troubleshoot-item {
-            margin-bottom: 28px;
-            padding: 24px;
-            background: var(--gray-50);
-            border-radius: 12px;
-            border: 1px solid var(--gray-200);
-            transition: all var(--transition-normal);
-        }
-
-        .troubleshoot-item:hover {
-            border-color: var(--primary-blue-light);
-            box-shadow: var(--shadow-md);
-        }
-
-        .troubleshoot-item .problem {
-            font-weight: 700;
-            font-size: 17px;
-            color: var(--gray-800);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .troubleshoot-item .problem::before {
-            content: "?";
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
-            color: white;
-            border-radius: 50%;
-            font-size: 16px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .troubleshoot-item .solution {
-            margin-left: 44px;
-            padding-left: 16px;
-            border-left: 3px solid var(--tip-border);
-        }
-
-        .troubleshoot-item .solution ul {
-            list-style: none;
+        .title-page h1 {
+            font-size: 48px;
+            border: none;
             margin: 0;
         }
 
-        .troubleshoot-item .solution li {
-            padding: 8px 0;
-            position: relative;
-            padding-left: 24px;
-            color: var(--gray-700);
+        .title-page .subtitle {
+            font-size: 24px;
+            color: var(--text-gray);
+            margin: 20px 0;
         }
 
-        .troubleshoot-item .solution li::before {
-            content: "\2192";
-            position: absolute;
-            left: 0;
-            color: var(--success-green);
+        .title-page .guide-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 30px 0;
+        }
+
+        .version-box {
+            display: inline-block;
+            background: var(--light-bg);
+            padding: 10px 30px;
+            border-radius: 5px;
+            color: var(--primary-color);
+            font-size: 14px;
+        }
+
+        .toc {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .toc-item {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .toc-item:last-child {
+            border-bottom: none;
+        }
+
+        .toc-num {
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .toc-title {
+            font-weight: bold;
+            width: 200px;
+        }
+
+        .toc-title a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .toc-title a:hover {
+            text-decoration: underline;
+        }
+
+        .toc-desc {
+            color: var(--text-gray);
+        }
+
+        .info-box {
+            background: var(--light-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .info-box .title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .warning-box {
+            background: var(--warning-yellow);
+            border: 2px solid var(--warning-border);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box .title {
+            font-weight: bold;
+            color: var(--warning-border);
+            margin-bottom: 10px;
+        }
+
+        .tip-box {
+            background: var(--tip-green);
+            border: 2px solid var(--tip-border);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .tip-box .title {
+            font-weight: bold;
+            color: var(--tip-border);
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
             font-weight: bold;
         }
 
-        /* Keyboard Shortcuts */
-        .shortcut-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin: 24px 0;
+        td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
         }
 
-        .shortcut-item {
+        tr:nth-child(even) {
+            background: var(--table-alt);
+        }
+
+        .step-table {
+            margin: 20px 0;
+        }
+
+        .step-row {
+            display: flex;
+            margin-bottom: 2px;
+        }
+
+        .step-num {
+            background: var(--primary-color);
+            color: white;
+            width: 50px;
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px 0;
+        }
+
+        .step-text {
+            flex: 1;
+            padding: 12px 15px;
+            background: #f8f9fa;
+        }
+
+        .step-row:nth-child(odd) .step-text {
+            background: #fff;
+        }
+
+        ul.feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul.feature-list li {
+            padding: 5px 0;
+        }
+
+        ul.feature-list li::before {
+            content: "\2713 ";
+            color: var(--success-green);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        ul.bullet-list {
+            padding-left: 25px;
+        }
+
+        ul.bullet-list li {
+            padding: 3px 0;
+        }
+
+        .setting-item {
+            margin: 10px 0;
+        }
+
+        .setting-item strong {
+            display: inline;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .issue {
+            margin: 25px 0;
+        }
+
+        .issue-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .issue-solution {
+            margin-left: 25px;
+            margin-top: 8px;
+        }
+
+        .shortcut {
             display: flex;
             align-items: center;
-            gap: 20px;
-            padding: 12px 16px;
-            background: var(--gray-50);
-            border-radius: 10px;
-            transition: all var(--transition-fast);
-        }
-
-        .shortcut-item:hover {
-            background: var(--gray-100);
-            transform: translateX(5px);
+            margin: 10px 0;
         }
 
         .shortcut-key {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(180deg, var(--white) 0%, var(--gray-100) 100%);
-            border: 2px solid var(--gray-300);
-            border-radius: 8px;
-            padding: 10px 18px;
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 14px;
-            min-width: 110px;
-            box-shadow: 0 3px 0 var(--gray-300), var(--shadow-sm);
-            color: var(--gray-700);
+            font-family: 'Consolas', monospace;
+            font-weight: bold;
+            background: #f4f4f4;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 15px;
         }
 
-        .shortcut-action {
-            color: var(--gray-600);
-        }
-
-        /* Quick Reference Table */
-        .ref-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 24px 0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }
-
-        .ref-table th {
-            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
-            color: white;
-            font-weight: 600;
-            text-align: left;
-            padding: 16px 20px;
-        }
-
-        .ref-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--gray-100);
-            background: var(--white);
-        }
-
-        .ref-table tr:hover td {
-            background: var(--gray-50);
-        }
-
-        .ref-table td:last-child {
-            font-family: var(--font-mono);
-            color: var(--accent-cyan);
-        }
-
-        /* Back to Top Button */
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: var(--shadow-lg);
-            opacity: 0;
-            visibility: hidden;
-            transition: all var(--transition-normal);
-            z-index: 1500;
-        }
-
-        .back-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .back-to-top:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: var(--shadow-xl);
-        }
-
-        /* Footer */
-        .footer {
+        .final-page {
             text-align: center;
-            padding: 50px 40px;
-            background: linear-gradient(135deg, var(--white), var(--gray-50));
-            border-radius: 20px;
-            margin-top: 40px;
-            border: 1px solid var(--gray-200);
+            padding: 80px 0;
+            margin-top: 60px;
+            border-top: 2px solid var(--primary-color);
         }
 
-        .footer .thanks {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
+        .final-page h2 {
+            color: var(--primary-color);
+            font-size: 24px;
+            border: none;
         }
 
-        .footer .version-info {
-            color: var(--gray-500);
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
+        .final-page .version {
+            color: var(--text-gray);
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--gray-200);
         }
 
-        .footer-link {
-            color: var(--gray-500);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color var(--transition-fast);
-        }
-
-        .footer-link:hover {
-            color: var(--primary-blue);
-        }
-
-        .footer .attribution {
-            margin-top: 20px;
-            font-size: 13px;
-            color: var(--gray-400);
-        }
-
-        /* Print Styles */
         @media print {
-            .nav-sidebar,
-            .dark-mode-toggle,
-            .back-to-top {
-                display: none !important;
+            body {
+                max-width: none;
+                padding: 0;
             }
 
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-                max-width: 100%;
-            }
-
-            .section {
-                box-shadow: none;
-                border: 1px solid var(--gray-300);
-                page-break-inside: avoid;
-            }
-
-            .hero {
-                background: var(--primary-blue) !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            h1, h2, h3 {
-                page-break-after: avoid;
-            }
-
-            .step-table, .data-table, .ref-table {
-                page-break-inside: avoid;
-            }
-
-            .accordion-content {
-                max-height: none !important;
-                padding: 0 24px 24px !important;
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .nav-sidebar {
-                width: 260px;
-            }
-
-            .main-content {
-                margin-left: 260px;
-                padding: 30px 40px 80px;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .progress-tracker {
-                flex-wrap: wrap;
-                gap: 20px;
-            }
-
-            .progress-step:not(:last-child)::after {
-                display: none;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .nav-sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                padding: 20px 0;
-            }
-
-            .nav-logo h1 {
-                font-size: 26px;
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 24px;
-            }
-
-            .hero {
-                padding: 50px 30px;
-            }
-
-            .hero h1 {
-                font-size: 36px;
-            }
-
-            .hero .subtitle {
-                font-size: 20px;
-            }
-
-            .section {
-                padding: 30px;
+            .title-page {
+                page-break-after: always;
             }
 
             h1 {
-                font-size: 26px;
+                page-break-before: always;
             }
 
-            h2 {
-                font-size: 20px;
-            }
-
-            .dark-mode-toggle {
-                top: 10px;
-                right: 10px;
-                padding: 6px 12px;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .hero h1 {
-                font-size: 28px;
-            }
-
-            .section {
-                padding: 24px 20px;
-            }
-
-            .step-table .step-number {
-                width: 45px;
-                font-size: 16px;
-                padding: 14px 10px;
-            }
-
-            .step-table .step-content {
-                padding: 14px 16px;
-            }
-
-            .data-table th,
-            .data-table td {
-                padding: 12px 14px;
-                font-size: 14px;
-            }
-
-            .back-to-top {
-                width: 48px;
-                height: 48px;
-                bottom: 20px;
-                right: 20px;
-                font-size: 20px;
+            .info-box, .warning-box, .tip-box {
+                break-inside: avoid;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
-    <label class="dark-mode-toggle" title="Toggle dark mode">
-        <span class="toggle-icon sun">&#9728;</span>
-        <input type="checkbox" id="darkModeToggle">
-        <span class="toggle-track">
-            <span class="toggle-thumb"></span>
-        </span>
-        <span class="toggle-icon moon">&#9790;</span>
-    </label>
 
-    <!-- Navigation Sidebar -->
-    <nav class="nav-sidebar">
-        <div class="nav-logo">
-            <h1>StimuPop</h1>
-            <span class="version-badge">v6.1.0</span>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="#introduction" class="nav-link"><span class="section-number">1</span> Introduction</a></li>
-            <li><a href="#getting-started" class="nav-link"><span class="section-number">2</span> Getting Started</a></li>
-            <li><a href="#preparing-excel" class="nav-link"><span class="section-number">3</span> Preparing Excel</a></li>
-            <li><a href="#using-stimupop" class="nav-link"><span class="section-number">4</span> Using StimuPop</a></li>
-            <li><a href="#configuration" class="nav-link"><span class="section-number">5</span> Configuration</a></li>
-            <li><a href="#troubleshooting" class="nav-link"><span class="section-number">6</span> Troubleshooting</a></li>
-            <li><a href="#quick-reference" class="nav-link"><span class="section-number">7</span> Quick Reference</a></li>
+<!-- Title Page -->
+<div class="title-page">
+    <h1>StimuPop</h1>
+    <div class="subtitle">Excel to PowerPoint Converter</div>
+    <div class="guide-label">USER GUIDE</div>
+    <div class="version-box">Version 6.2.0</div>
+</div>
+
+<!-- Table of Contents -->
+<h1>Table of Contents</h1>
+<div class="toc">
+    <div class="toc-item">
+        <span class="toc-num">1.</span>
+        <span class="toc-title"><a href="#introduction">Introduction</a></span>
+        <span class="toc-desc">What is StimuPop?</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">2.</span>
+        <span class="toc-title"><a href="#getting-started">Getting Started</a></span>
+        <span class="toc-desc">Installation and first launch</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">3.</span>
+        <span class="toc-title"><a href="#preparing-excel">Preparing Your Excel File</a></span>
+        <span class="toc-desc">Data structure requirements</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">4.</span>
+        <span class="toc-title"><a href="#using-stimupop">Using StimuPop</a></span>
+        <span class="toc-desc">Step-by-step guide</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">5.</span>
+        <span class="toc-title"><a href="#configuration">Configuration Options</a></span>
+        <span class="toc-desc">Customizing your output</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">6.</span>
+        <span class="toc-title"><a href="#troubleshooting">Troubleshooting</a></span>
+        <span class="toc-desc">Common issues and solutions</span>
+    </div>
+    <div class="toc-item">
+        <span class="toc-num">7.</span>
+        <span class="toc-title"><a href="#quick-reference">Quick Reference</a></span>
+        <span class="toc-desc">Keyboard shortcuts and tips</span>
+    </div>
+</div>
+
+<!-- Section 1: Introduction -->
+<h1 id="introduction">1. Introduction</h1>
+
+<h2>What is StimuPop?</h2>
+
+<p><strong>StimuPop</strong> is a powerful yet easy-to-use application that converts Excel spreadsheet data into professional PowerPoint presentations. It's designed to save you hours of manual work by automatically:</p>
+
+<ul class="feature-list">
+    <li>Extracting embedded images from Excel cells</li>
+    <li>Creating individual slides for each data row</li>
+    <li>Uniform image sizing with multiple sizing modes</li>
+    <li>Formatting text with custom fonts, sizes, and colors</li>
+    <li>Supporting both portrait and landscape orientations</li>
+    <li>Handling errors gracefully (missing images won't stop the process)</li>
+</ul>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    StimuPop is perfect for creating product catalogs, photo albums, training materials, and any presentation where each slide follows the same format.
+</div>
+
+<!-- Section 2: Getting Started -->
+<h1 id="getting-started">2. Getting Started</h1>
+
+<h2>Installation (Portable Version)</h2>
+
+<p>The portable version requires no installation. Simply follow these steps:</p>
+
+<div class="step-table">
+    <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-text">Extract the ZIP file to any folder on your computer</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-text">Open the extracted folder</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-text">Double-click 'StimuPop.exe' (or 'StimuPop.bat') to launch the application</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-text">Wait for the terminal window to display 'Server ready!' message</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-text">Hold Ctrl and click the localhost link in the terminal, OR copy the URL and paste it into your browser</div>
+    </div>
+</div>
+
+<div class="info-box">
+    <div class="title">First Launch</div>
+    The first time you run StimuPop, the server may take 30-60 seconds to start. Wait for the 'Server ready!' message before clicking the link. Subsequent launches will be faster.
+</div>
+
+<h2>System Requirements</h2>
+
+<table>
+    <tr>
+        <th>Requirement</th>
+        <th>Specification</th>
+    </tr>
+    <tr>
+        <td><strong>Operating System</strong></td>
+        <td>Windows 10 or later (64-bit)</td>
+    </tr>
+    <tr>
+        <td><strong>Disk Space</strong></td>
+        <td>~300 MB for portable version</td>
+    </tr>
+    <tr>
+        <td><strong>Memory</strong></td>
+        <td>4 GB RAM minimum</td>
+    </tr>
+    <tr>
+        <td><strong>Browser</strong></td>
+        <td>Chrome, Firefox, or Edge (latest version)</td>
+    </tr>
+</table>
+
+<!-- Section 3: Preparing Your Excel File -->
+<h1 id="preparing-excel">3. Preparing Your Excel File</h1>
+
+<p>For best results, structure your Excel file as follows:</p>
+
+<h2>Recommended Structure</h2>
+
+<table>
+    <tr>
+        <th>Column A<br>(Skip)</th>
+        <th>Column B<br>(Image)</th>
+        <th>Column C<br>(Title)</th>
+        <th>Column D<br>(Description)</th>
+    </tr>
+    <tr>
+        <td>ID-001</td>
+        <td>[Image 1]</td>
+        <td>Product One</td>
+        <td>Description of product one</td>
+    </tr>
+    <tr>
+        <td>ID-002</td>
+        <td>[Image 2]</td>
+        <td>Product Two</td>
+        <td>Description of product two</td>
+    </tr>
+    <tr>
+        <td>ID-003</td>
+        <td>[Image 3]</td>
+        <td>Product Three</td>
+        <td>Description of product three</td>
+    </tr>
+</table>
+
+<h2>Image Options</h2>
+
+<p>StimuPop supports three ways to include images:</p>
+
+<div class="setting-item"><strong>Embedded Images:</strong> Paste images directly into Excel cells. This is the most reliable method.</div>
+<div class="setting-item"><strong>File Paths:</strong> Enter the full path to an image file (e.g., C:\Images\photo.jpg)</div>
+<div class="setting-item"><strong>URLs:</strong> Enter a web URL to an image (e.g., https://example.com/image.png)</div>
+
+<div class="warning-box">
+    <div class="title">Important</div>
+    Images embedded directly in Excel cells provide the most consistent results. File paths must be accessible from the computer running StimuPop.
+</div>
+
+<h2>Column Flexibility</h2>
+
+<p>Your Excel file can have any number of columns. StimuPop is flexible about your data structure:</p>
+
+<ul class="bullet-list">
+    <li>Add as many text columns as you need (C, D, E, F, G, etc.)</li>
+    <li>Skip columns you do not want to include in the presentation</li>
+    <li>Use column letters (B, C, D) or column header names (Image, Title, Description)</li>
+    <li>Columns can be in any order - just specify the correct references</li>
+    <li>Empty cells are handled gracefully (no errors for missing data)</li>
+</ul>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    You only need to specify the columns you want to use. StimuPop ignores all other columns in your Excel file.
+</div>
+
+<!-- Section 4: Using StimuPop -->
+<h1 id="using-stimupop">4. Using StimuPop</h1>
+
+<h2>Step-by-Step Guide</h2>
+
+<div class="step-table">
+    <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-text">Launch StimuPop by double-clicking 'StimuPop.exe' and wait for 'Server ready!'</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-text">Ctrl+click the localhost link (or copy/paste into browser)</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-text">Click 'Browse files' under 'Upload Excel File' and select your .xlsx file</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-text">Optionally upload a PowerPoint template for custom styling</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-text">Set the Image Column (e.g., 'B' or the column header name)</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">6</div>
+        <div class="step-text">Set the Text Columns (e.g., 'C,D,E,F' for multiple columns)</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">7</div>
+        <div class="step-text">Adjust font size using the slider (default: 14pt)</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">8</div>
+        <div class="step-text">Click the blue 'Generate Presentation' button</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">9</div>
+        <div class="step-text">Wait for processing (progress bar shows status)</div>
+    </div>
+    <div class="step-row">
+        <div class="step-num">10</div>
+        <div class="step-text">Click 'Download Presentation' to save your .pptx file</div>
+    </div>
+</div>
+
+<h2>Understanding the Interface</h2>
+
+<p>The StimuPop interface is divided into several sections:</p>
+
+<div class="setting-item"><strong>Upload Files:</strong> Where you select your Excel file and optional PowerPoint template</div>
+<div class="setting-item"><strong>Configuration:</strong> Basic settings like image column, text columns, and font size</div>
+<div class="setting-item"><strong>Advanced Settings:</strong> Layout options and per-column formatting (click to expand)</div>
+<div class="setting-item"><strong>Data Preview:</strong> Shows a preview of your Excel data before generation</div>
+<div class="setting-item"><strong>Generate Button:</strong> Starts the presentation generation process</div>
+
+<!-- Section 5: Configuration Options -->
+<h1 id="configuration">5. Configuration Options</h1>
+
+<h2>Basic Settings</h2>
+
+<table>
+    <tr>
+        <th>Setting</th>
+        <th>Description</th>
+        <th>Default</th>
+    </tr>
+    <tr>
+        <td><strong>Image Column</strong></td>
+        <td>Letter (A-Z) or name of the column containing images</td>
+        <td>B</td>
+    </tr>
+    <tr>
+        <td><strong>Text Columns</strong></td>
+        <td>Comma-separated list of columns for text content</td>
+        <td>C,D,E,F</td>
+    </tr>
+    <tr>
+        <td><strong>Font Size</strong></td>
+        <td>Default font size for all text (8-48pt)</td>
+        <td>14</td>
+    </tr>
+    <tr>
+        <td><strong>Pictures Only</strong></td>
+        <td>Skip all text columns and create image-only slides</td>
+        <td>Off</td>
+    </tr>
+</table>
+
+<h3>Pictures Only Mode (New in v6.2)</h3>
+
+<p>Enable 'Pictures Only (no text)' checkbox to create image-only slideshows:</p>
+
+<ul class="bullet-list">
+    <li>Photo albums and image galleries</li>
+    <li>Product image catalogs without descriptions</li>
+    <li>Visual presentations where text is unnecessary</li>
+    <li>Quick image slideshows from Excel collections</li>
+</ul>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    When Pictures Only mode is enabled, the Text Columns setting is ignored. Only the Image Column is used to create slides.
+</div>
+
+<h2>Advanced Settings</h2>
+
+<p>Click 'Advanced Settings' to access template mode, layout, image sizing, text spacing, and alignment options:</p>
+
+<h3>Template Mode</h3>
+
+<p>StimuPop offers two generation modes for creating slides:</p>
+
+<div class="setting-item"><strong>Blank Mode (default):</strong> Creates slides from scratch with configurable layout. You control image position, text position, fonts, and colors. Best for new presentations or when you need full control over styling.</div>
+
+<div class="setting-item"><strong>Template Mode:</strong> Uses an existing PowerPoint template slide as the base. StimuPop clones the template for each row and populates placeholders with your data. Best when you have an existing design you want to preserve exactly.</div>
+
+<div class="info-box">
+    <div class="title">Template Mode Settings</div>
+    When using Template Mode:<br>
+    - Upload a .pptx template with your desired slide design<br>
+    - Specify the Image Placeholder Name (shape containing the image)<br>
+    - Specify the Text Placeholder Name (shape containing text)<br>
+    - StimuPop preserves all template formatting (fonts, sizes, colors)
+</div>
+
+<h3>Image Sizing</h3>
+
+<p>Control how images are sized uniformly across all slides. These settings work in both Blank and Template modes:</p>
+
+<table>
+    <tr>
+        <th>Size Mode</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><strong>Fit to Box (Recommended)</strong></td>
+        <td>Images scale to fit within Max Width and Max Height while maintaining aspect ratio. All images appear uniform.</td>
+    </tr>
+    <tr>
+        <td><strong>Fit Width Only</strong></td>
+        <td>Images have fixed width, height adjusts automatically based on aspect ratio.</td>
+    </tr>
+    <tr>
+        <td><strong>Fit Height Only</strong></td>
+        <td>Images have fixed height, width adjusts automatically based on aspect ratio.</td>
+    </tr>
+    <tr>
+        <td><strong>Stretch to Exact Size</strong></td>
+        <td>Images are forced to exact dimensions. May distort images.</td>
+    </tr>
+</table>
+
+<p>Image dimension sliders (updated in v6.2):</p>
+<div class="setting-item"><strong>Max Width:</strong> 0.0 - 9.0 inches (0 allows thumbnail-sized images)</div>
+<div class="setting-item"><strong>Max Height:</strong> 0.0 - 7.0 inches (0 allows thumbnail-sized images)</div>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    Use 'Fit to Box' mode for product catalogs and photo albums where you want all images to appear the same size regardless of their original dimensions.
+</div>
+
+<h3>Layout Position (Blank Mode Only)</h3>
+
+<p>These settings control slide layout and are only available when using Blank slide mode (not Template mode):</p>
+
+<div class="setting-item"><strong>Image Top Position:</strong> Distance from top of slide to image (Default: 0.5 inches)</div>
+<div class="setting-item"><strong>Text Top Position:</strong> Distance from top of slide to text area (0.0-9.0 inches) (Default: 5.0 inches)</div>
+<div class="setting-item"><strong>Slide Orientation:</strong> Portrait (tall) or Landscape (wide) (Default: Portrait)</div>
+
+<h3>Image Alignment (Blank Mode Only)</h3>
+
+<p>Control how images are positioned within their bounding box. These settings only apply to Blank mode:</p>
+
+<table>
+    <tr>
+        <th>Alignment Type</th>
+        <th>Options</th>
+    </tr>
+    <tr>
+        <td><strong>Vertical Alignment</strong></td>
+        <td>Top, Center (default), Bottom</td>
+    </tr>
+    <tr>
+        <td><strong>Horizontal Alignment</strong></td>
+        <td>Left, Center (default), Right</td>
+    </tr>
+</table>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    Use 'Bottom' vertical alignment for variety cards where you want images anchored to the bottom of the image area, regardless of image height.
+</div>
+
+<h3>Text Spacing</h3>
+
+<p>Control spacing and overflow behavior for text content:</p>
+
+<div class="setting-item"><strong>Paragraph Spacing:</strong> Space after each paragraph (0-24pt). Default 0pt means no extra spacing between lines.</div>
+<div class="setting-item"><strong>Text Overflow:</strong> How text boxes handle content that exceeds the box size:</div>
+
+<ul class="bullet-list" style="margin-left: 30px;">
+    <li><strong>Resize shape to fit text (default):</strong> The text box expands to fit all content. Text remains at original size.</li>
+    <li><strong>Shrink text on overflow:</strong> Text automatically shrinks to fit within the text box boundaries.</li>
+</ul>
+
+<div class="info-box">
+    <div class="title">Text Overflow (New in v6.2)</div>
+    The Text Overflow dropdown gives you control over how StimuPop handles long text that exceeds the text box. 'Resize shape to fit text' keeps text readable but may extend beyond the slide. 'Shrink text on overflow' keeps text within bounds but may make it smaller.
+</div>
+
+<h3>Advanced Positioning (New in v6.0)</h3>
+
+<p>For precise control over text column placement, enable 'Advanced Positioning' by checking the checkbox in Advanced Settings. This reveals per-column position controls:</p>
+
+<div class="setting-item"><strong>Auto (default):</strong> Text flows sequentially after the previous column. Position depends on content length of earlier columns.</div>
+<div class="setting-item"><strong>Fixed:</strong> Text is placed at an exact position on the slide, regardless of other content. Creates a separate text box.</div>
+
+<p>Default fixed positions (useful for variety cards):</p>
+<div class="setting-item"><strong>Column E:</strong> 5.0 inches from top</div>
+<div class="setting-item"><strong>Column F:</strong> 6.5 inches from top</div>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    Use Fixed positioning for columns E and F when you want them to appear in the same location on every slide, even if the Brand (C) and Product Name (D) vary in length.
+</div>
+
+<h3>Per-Column Formatting (Blank Mode Only)</h3>
+
+<p>When using Blank mode, you can customize each text column individually in Advanced Settings:</p>
+
+<ul class="bullet-list">
+    <li>Font size (8-48pt, expanded range in v6.2)</li>
+    <li>Font family (Calibri, Arial, Times New Roman, etc.)</li>
+    <li>Text color (color picker)</li>
+    <li>Bold and Italic styles</li>
+</ul>
+
+<div class="tip-box">
+    <div class="title">Tip</div>
+    Use larger, bold fonts for titles (Column C) and smaller regular fonts for descriptions (Column D) to create visual hierarchy.
+</div>
+
+<!-- Section 6: Troubleshooting -->
+<h1 id="troubleshooting">6. Troubleshooting</h1>
+
+<div class="issue">
+    <div class="issue-title">Application won't start</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Ensure you extracted all files from the ZIP</li>
+            <li>Run as Administrator (right-click - Run as administrator)</li>
+            <li>Check that antivirus isn't blocking the application</li>
         </ul>
-    </nav>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">Browser doesn't open automatically</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Wait for 'Server ready!' message in the terminal window</li>
+            <li>Hold Ctrl and click the localhost link, or copy/paste the URL</li>
+            <li>Manually open your browser and go to: http://localhost:8501</li>
+            <li>Try a different browser (Chrome recommended)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">'Column not found' error</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Check that your column letter/name matches exactly</li>
+            <li>Column letters are case-insensitive (B = b)</li>
+            <li>Column names ARE case-sensitive</li>
+        </ul>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">Images not appearing on slides</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Ensure images are embedded in cells, not floating</li>
+            <li>Check file paths are correct and accessible</li>
+            <li>Verify image files are JPG, PNG, or GIF format</li>
+        </ul>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">Presentation generation is slow</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Large images take longer to process</li>
+            <li>Consider resizing images in Excel before upload</li>
+            <li>Reduce the number of slides if testing</li>
+        </ul>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">Text formatting not applied</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Ensure you configured formatting in Advanced Settings</li>
+            <li>Check that column letters in formatting match your data</li>
+        </ul>
+    </div>
+</div>
+
+<div class="issue">
+    <div class="issue-title">Images are different sizes on slides</div>
+    <div class="issue-solution">
+        <ul class="bullet-list">
+            <li>Open Advanced Settings and set Size Mode to 'Fit to Box'</li>
+            <li>Adjust Max Width and Max Height to your desired dimensions</li>
+            <li>All images will now scale uniformly</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Section 7: Quick Reference -->
+<h1 id="quick-reference">7. Quick Reference</h1>
+
+<h2>Column Reference Cheat Sheet</h2>
+
+<table>
+    <tr>
+        <th>Reference Type</th>
+        <th>Example</th>
+    </tr>
+    <tr>
+        <td>Single letter</td>
+        <td><code>B</code></td>
+    </tr>
+    <tr>
+        <td>Multiple letters</td>
+        <td><code>C,D,E,F</code></td>
+    </tr>
+    <tr>
+        <td>Column name</td>
+        <td><code>Title</code></td>
+    </tr>
+    <tr>
+        <td>Mixed</td>
+        <td><code>B,Title,Description</code></td>
+    </tr>
+    <tr>
+        <td>With spaces</td>
+        <td><code>"Product Name"</code></td>
+    </tr>
+</table>
+
+<h2>Keyboard Shortcuts</h2>
+
+<div class="shortcut">
+    <span class="shortcut-key">Ctrl + C</span>
+    <span>Stop the application (in command window)</span>
+</div>
+
+<div class="shortcut">
+    <span class="shortcut-key">F5</span>
+    <span>Refresh the browser page</span>
+</div>
+
+<div class="shortcut">
+    <span class="shortcut-key">Ctrl + S</span>
+    <span>Save downloaded file (in browser)</span>
+</div>
+
+<div class="info-box">
+    <div class="title">Need Help?</div>
+    If you encounter issues not covered in this guide, please contact your system administrator or the development team with:<br>
+    - A description of the problem<br>
+    - The exact error message (if any)<br>
+    - Your Excel file (if possible)
+</div>
+
+<!-- Final Page -->
+<div class="final-page">
+    <h2>Thank you for using StimuPop!</h2>
+    <div class="version">Version 6.2.0</div>
+</div>
 
-    <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop" title="Back to top">&#8593;</button>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Hero Section -->
-        <div class="hero animate-fade-in">
-            <div class="hero-content">
-                <h1>StimuPop</h1>
-                <div class="subtitle">Excel to PowerPoint Converter</div>
-                <div class="tagline">Transform spreadsheet data into stunning presentations in seconds</div>
-                <span class="badge">Version 6.1.0</span>
-            </div>
-        </div>
-
-        <!-- Section 1: Introduction -->
-        <section id="introduction" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128161;</span> 1. Introduction</h1>
-
-            <h2>What is StimuPop?</h2>
-            <p><strong>StimuPop</strong> is a powerful yet easy-to-use application that converts Excel spreadsheet data into professional PowerPoint presentations. It is designed to save you hours of manual work by automatically handling images, text, and formatting.</p>
-
-            <!-- Feature Cards -->
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="card-icon">&#128247;</span>
-                    <h3>Image Extraction</h3>
-                    <p>Automatically extracts embedded images from Excel cells with full fidelity.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="card-icon">&#128196;</span>
-                    <h3>Slide Generation</h3>
-                    <p>Creates individual slides for each data row with consistent formatting.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="card-icon">&#127912;</span>
-                    <h3>Smart Sizing</h3>
-                    <p>Multiple sizing modes ensure uniform image appearance across all slides.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="card-icon">&#9998;</span>
-                    <h3>Custom Formatting</h3>
-                    <p>Control fonts, sizes, colors, and positioning for professional results.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="card-icon">&#128260;</span>
-                    <h3>Dual Orientation</h3>
-                    <p>Supports both portrait and landscape slide orientations.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="card-icon">&#9989;</span>
-                    <h3>Error Handling</h3>
-                    <p>Gracefully handles missing images without stopping the process.</p>
-                </div>
-            </div>
-
-            <div class="info-box tip">
-                <div class="box-title">Pro Tip</div>
-                StimuPop is perfect for creating product catalogs, photo albums, training materials, and any presentation where each slide follows the same format.
-            </div>
-        </section>
-
-        <!-- Section 2: Getting Started -->
-        <section id="getting-started" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128640;</span> 2. Getting Started</h1>
-
-            <h2>Installation (Portable Version)</h2>
-            <p>The portable version requires no installation. Simply follow these steps:</p>
-
-            <table class="step-table">
-                <tr>
-                    <td class="step-number">1</td>
-                    <td class="step-content">Extract the ZIP file to any folder on your computer</td>
-                </tr>
-                <tr>
-                    <td class="step-number">2</td>
-                    <td class="step-content">Open the extracted folder</td>
-                </tr>
-                <tr>
-                    <td class="step-number">3</td>
-                    <td class="step-content">Double-click <code>StimuPop.exe</code> (or <code>StimuPop.bat</code>) to launch the application</td>
-                </tr>
-                <tr>
-                    <td class="step-number">4</td>
-                    <td class="step-content">Wait for the terminal window to display <code>Server ready!</code> message</td>
-                </tr>
-                <tr>
-                    <td class="step-number">5</td>
-                    <td class="step-content">Hold <code>Ctrl</code> and click the localhost link, OR copy the URL and paste it into your browser</td>
-                </tr>
-            </table>
-
-            <div class="info-box info">
-                <div class="box-title">First Launch</div>
-                The first time you run StimuPop, the server may take 30-60 seconds to start. Wait for the <code>Server ready!</code> message before clicking the link. Subsequent launches will be faster.
-            </div>
-
-            <h2>System Requirements</h2>
-
-            <table class="data-table">
-                <tr>
-                    <td class="setting-name">&#128187; Operating System</td>
-                    <td>Windows 10 or later (64-bit)</td>
-                </tr>
-                <tr>
-                    <td class="setting-name">&#128190; Disk Space</td>
-                    <td>~300 MB for portable version</td>
-                </tr>
-                <tr>
-                    <td class="setting-name">&#129518; Memory</td>
-                    <td>4 GB RAM minimum</td>
-                </tr>
-                <tr>
-                    <td class="setting-name">&#127760; Browser</td>
-                    <td>Chrome, Firefox, or Edge (latest version)</td>
-                </tr>
-            </table>
-        </section>
-
-        <!-- Section 3: Preparing Your Excel File -->
-        <section id="preparing-excel" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128202;</span> 3. Preparing Your Excel File</h1>
-            <p>For best results, structure your Excel file as follows:</p>
-
-            <h2>Recommended Structure</h2>
-
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Column A<br>(Skip)</th>
-                        <th>Column B<br>(Image)</th>
-                        <th>Column C<br>(Title)</th>
-                        <th>Column D<br>(Description)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>ID-001</td>
-                        <td><em>[Image 1]</em></td>
-                        <td>Product One</td>
-                        <td>Description of product one</td>
-                    </tr>
-                    <tr>
-                        <td>ID-002</td>
-                        <td><em>[Image 2]</em></td>
-                        <td>Product Two</td>
-                        <td>Description of product two</td>
-                    </tr>
-                    <tr>
-                        <td>ID-003</td>
-                        <td><em>[Image 3]</em></td>
-                        <td>Product Three</td>
-                        <td>Description of product three</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h2>Image Options</h2>
-
-            <div class="accordion">
-                <div class="accordion-item">
-                    <input type="checkbox" id="acc1" checked>
-                    <label class="accordion-header" for="acc1">
-                        <span>&#128247; Embedded Images (Recommended)</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>Paste images directly into Excel cells. This is the most reliable method and ensures images travel with the file.</p>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <input type="checkbox" id="acc2">
-                    <label class="accordion-header" for="acc2">
-                        <span>&#128193; File Paths</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>Enter the full path to an image file (e.g., <code>C:\Images\photo.jpg</code>). Ensure paths are accessible from the computer running StimuPop.</p>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <input type="checkbox" id="acc3">
-                    <label class="accordion-header" for="acc3">
-                        <span>&#127760; URLs</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>Enter a web URL to an image (e.g., <code>https://example.com/image.png</code>). Requires internet connection during generation.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-box warning">
-                <div class="box-title">Important</div>
-                Images embedded directly in Excel cells provide the most consistent results. File paths must be accessible from the computer running StimuPop.
-            </div>
-        </section>
-
-        <!-- Section 4: Using StimuPop -->
-        <section id="using-stimupop" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#9881;</span> 4. Using StimuPop</h1>
-
-            <h2>10-Step Workflow</h2>
-
-            <!-- Progress Tracker -->
-            <div class="progress-tracker">
-                <div class="progress-step">
-                    <div class="step-circle">1</div>
-                    <span class="step-label">Launch App</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">2</div>
-                    <span class="step-label">Open Browser</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">3</div>
-                    <span class="step-label">Upload Excel</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">4</div>
-                    <span class="step-label">Add Template</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">5</div>
-                    <span class="step-label">Set Image Col</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">6</div>
-                    <span class="step-label">Set Text Cols</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">7</div>
-                    <span class="step-label">Adjust Font</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">8</div>
-                    <span class="step-label">Generate</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">9</div>
-                    <span class="step-label">Wait</span>
-                </div>
-                <div class="progress-step">
-                    <div class="step-circle">10</div>
-                    <span class="step-label">Download</span>
-                </div>
-            </div>
-
-            <table class="step-table">
-                <tr>
-                    <td class="step-number">1</td>
-                    <td class="step-content">Launch StimuPop by double-clicking <code>StimuPop.exe</code> and wait for <code>Server ready!</code></td>
-                </tr>
-                <tr>
-                    <td class="step-number">2</td>
-                    <td class="step-content">Ctrl+click the localhost link (or copy/paste into browser)</td>
-                </tr>
-                <tr>
-                    <td class="step-number">3</td>
-                    <td class="step-content">Click <strong>Browse files</strong> under <strong>Upload Excel File</strong> and select your <code>.xlsx</code> file</td>
-                </tr>
-                <tr>
-                    <td class="step-number">4</td>
-                    <td class="step-content">Optionally upload a PowerPoint template for custom styling</td>
-                </tr>
-                <tr>
-                    <td class="step-number">5</td>
-                    <td class="step-content">Set the <strong>Image Column</strong> (e.g., <code>B</code> or the column header name)</td>
-                </tr>
-                <tr>
-                    <td class="step-number">6</td>
-                    <td class="step-content">Set the <strong>Text Columns</strong> (e.g., <code>C,D,E,F</code> for multiple columns)</td>
-                </tr>
-                <tr>
-                    <td class="step-number">7</td>
-                    <td class="step-content">Adjust font size using the slider (default: 14pt)</td>
-                </tr>
-                <tr>
-                    <td class="step-number">8</td>
-                    <td class="step-content">Click the blue <strong>Generate Presentation</strong> button</td>
-                </tr>
-                <tr>
-                    <td class="step-number">9</td>
-                    <td class="step-content">Wait for processing (progress bar shows status)</td>
-                </tr>
-                <tr>
-                    <td class="step-number">10</td>
-                    <td class="step-content">Click <strong>Download Presentation</strong> to save your <code>.pptx</code> file</td>
-                </tr>
-            </table>
-
-            <h2>Understanding the Interface</h2>
-
-            <dl class="def-list">
-                <dt>Upload Files</dt>
-                <dd>Where you select your Excel file and optional PowerPoint template</dd>
-
-                <dt>Configuration</dt>
-                <dd>Basic settings like image column, text columns, and font size</dd>
-
-                <dt>Advanced Settings</dt>
-                <dd>Layout options and per-column formatting (click to expand)</dd>
-
-                <dt>Data Preview</dt>
-                <dd>Shows a preview of your Excel data before generation</dd>
-
-                <dt>Generate Button</dt>
-                <dd>Starts the presentation generation process</dd>
-            </dl>
-        </section>
-
-        <!-- Section 5: Configuration Options -->
-        <section id="configuration" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128736;</span> 5. Configuration Options</h1>
-
-            <h2>Basic Settings</h2>
-
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Setting</th>
-                        <th>Description</th>
-                        <th>Default</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="setting-name">Image Column</td>
-                        <td>Letter (A-Z) or name of the column containing images</td>
-                        <td><span class="default-value">B</span></td>
-                    </tr>
-                    <tr>
-                        <td class="setting-name">Text Columns</td>
-                        <td>Comma-separated list of columns for text content</td>
-                        <td><span class="default-value">C,D,E,F</span></td>
-                    </tr>
-                    <tr>
-                        <td class="setting-name">Font Size</td>
-                        <td>Default font size for all text (10-32pt)</td>
-                        <td><span class="default-value">14</span></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h2>Advanced Settings</h2>
-            <p>Click <strong>Advanced Settings</strong> to access layout, image sizing, and alignment options:</p>
-
-            <div class="accordion">
-                <div class="accordion-item">
-                    <input type="checkbox" id="adv1" checked>
-                    <label class="accordion-header" for="adv1">
-                        <span>&#128444; Image Alignment (New in v6.0)</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>Control how images are positioned within their bounding box:</p>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Alignment Type</th>
-                                    <th>Options</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="setting-name">Vertical Alignment</td>
-                                    <td>Top, Center (default), Bottom</td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Horizontal Alignment</td>
-                                    <td>Left, Center (default), Right</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="info-box tip">
-                            <div class="box-title">Tip</div>
-                            Use <strong>Bottom</strong> vertical alignment for variety cards where you want images anchored to the bottom of the image area.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <input type="checkbox" id="adv2">
-                    <label class="accordion-header" for="adv2">
-                        <span>&#128208; Image Sizing</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>Control how images are sized uniformly across all slides:</p>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Size Mode</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="setting-name">Fit to Box (Recommended)</td>
-                                    <td>Images scale to fit within Max Width and Max Height while maintaining aspect ratio.</td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Fit Width Only</td>
-                                    <td>Images have fixed width, height adjusts automatically based on aspect ratio.</td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Fit Height Only</td>
-                                    <td>Images have fixed height, width adjusts automatically based on aspect ratio.</td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Stretch to Exact Size</td>
-                                    <td>Images are forced to exact dimensions. May distort images.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <input type="checkbox" id="adv3">
-                    <label class="accordion-header" for="adv3">
-                        <span>&#128207; Layout Position Settings</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>These settings are only available when using Blank slide mode (not Template mode):</p>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Setting</th>
-                                    <th>Description</th>
-                                    <th>Default</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="setting-name">Max Width</td>
-                                    <td>Maximum image width (2.0-9.0 inches)</td>
-                                    <td><span class="default-value">5.5 inches</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Max Height</td>
-                                    <td>Maximum image height (2.0-7.0 inches)</td>
-                                    <td><span class="default-value">4.0 inches</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Image Top Position</td>
-                                    <td>Distance from top of slide to image</td>
-                                    <td><span class="default-value">0.5 inches</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Text Top Position</td>
-                                    <td>Distance from top of slide to text area</td>
-                                    <td><span class="default-value">5.0 inches</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="setting-name">Slide Orientation</td>
-                                    <td>Portrait (tall) or Landscape (wide)</td>
-                                    <td><span class="default-value">Portrait</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <input type="checkbox" id="adv4">
-                    <label class="accordion-header" for="adv4">
-                        <span>&#127919; Advanced Positioning (New in v6.0)</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>For precise control over text column placement, enable <strong>Advanced Positioning</strong>:</p>
-                        <dl class="def-list">
-                            <dt>Auto (default)</dt>
-                            <dd>Text flows sequentially after the previous column.</dd>
-                            <dt>Fixed</dt>
-                            <dd>Text is placed at an exact position on the slide, regardless of other content.</dd>
-                        </dl>
-                        <p>Default fixed positions (useful for variety cards):</p>
-                        <ul class="feature-list">
-                            <li><strong>Column E:</strong> 5.0 inches from top</li>
-                            <li><strong>Column F:</strong> 6.5 inches from top</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <input type="checkbox" id="adv5">
-                    <label class="accordion-header" for="adv5">
-                        <span>&#127912; Per-Column Formatting</span>
-                        <span class="accordion-icon">+</span>
-                    </label>
-                    <div class="accordion-content">
-                        <p>When using Blank mode, you can customize each text column individually:</p>
-                        <ul class="feature-list">
-                            <li>Font size (8-48pt)</li>
-                            <li>Font family (Calibri, Arial, Times New Roman, etc.)</li>
-                            <li>Text color (color picker)</li>
-                            <li>Bold and Italic styles</li>
-                        </ul>
-                        <div class="info-box tip">
-                            <div class="box-title">Tip</div>
-                            Use larger, bold fonts for titles (Column C) and smaller regular fonts for descriptions (Column D) to create visual hierarchy.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 6: Troubleshooting -->
-        <section id="troubleshooting" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128295;</span> 6. Troubleshooting</h1>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Application won't start</div>
-                <div class="solution">
-                    <ul>
-                        <li>Ensure you extracted all files from the ZIP</li>
-                        <li>Run as Administrator (right-click and select Run as administrator)</li>
-                        <li>Check that antivirus is not blocking the application</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Browser does not open automatically</div>
-                <div class="solution">
-                    <ul>
-                        <li>Wait for <code>Server ready!</code> message in the terminal window</li>
-                        <li>Hold Ctrl and click the localhost link, or copy/paste the URL</li>
-                        <li>Manually open your browser and go to: <code>http://localhost:8501</code></li>
-                        <li>Try a different browser (Chrome recommended)</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">'Column not found' error</div>
-                <div class="solution">
-                    <ul>
-                        <li>Check that your column letter/name matches exactly</li>
-                        <li>Column letters are case-insensitive (B = b)</li>
-                        <li>Column names ARE case-sensitive</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Images not appearing on slides</div>
-                <div class="solution">
-                    <ul>
-                        <li>Ensure images are embedded in cells, not floating</li>
-                        <li>Check file paths are correct and accessible</li>
-                        <li>Verify image files are JPG, PNG, or GIF format</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Presentation generation is slow</div>
-                <div class="solution">
-                    <ul>
-                        <li>Large images take longer to process</li>
-                        <li>Consider resizing images in Excel before upload</li>
-                        <li>Reduce the number of slides if testing</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Text formatting not applied</div>
-                <div class="solution">
-                    <ul>
-                        <li>Ensure you configured formatting in Advanced Settings</li>
-                        <li>Check that column letters in formatting match your data</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="troubleshoot-item">
-                <div class="problem">Images are different sizes on slides</div>
-                <div class="solution">
-                    <ul>
-                        <li>Open Advanced Settings and set Size Mode to <strong>Fit to Box</strong></li>
-                        <li>Adjust Max Width and Max Height to your desired dimensions</li>
-                        <li>All images will now scale uniformly</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 7: Quick Reference -->
-        <section id="quick-reference" class="section animate-fade-in-up">
-            <h1><span class="section-icon">&#128218;</span> 7. Quick Reference</h1>
-
-            <h2>Column Reference Cheat Sheet</h2>
-
-            <table class="ref-table">
-                <thead>
-                    <tr>
-                        <th>Reference Type</th>
-                        <th>Example</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Single letter</td>
-                        <td>B</td>
-                    </tr>
-                    <tr>
-                        <td>Multiple letters</td>
-                        <td>C,D,E,F</td>
-                    </tr>
-                    <tr>
-                        <td>Column name</td>
-                        <td>Title</td>
-                    </tr>
-                    <tr>
-                        <td>Mixed</td>
-                        <td>B,Title,Description</td>
-                    </tr>
-                    <tr>
-                        <td>With spaces</td>
-                        <td>"Product Name"</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h2>Keyboard Shortcuts</h2>
-
-            <div class="shortcut-list">
-                <div class="shortcut-item">
-                    <span class="shortcut-key">Ctrl + C</span>
-                    <span class="shortcut-action">Stop the application (in command window)</span>
-                </div>
-                <div class="shortcut-item">
-                    <span class="shortcut-key">F5</span>
-                    <span class="shortcut-action">Refresh the browser page</span>
-                </div>
-                <div class="shortcut-item">
-                    <span class="shortcut-key">Ctrl + S</span>
-                    <span class="shortcut-action">Save downloaded file (in browser)</span>
-                </div>
-            </div>
-
-            <div class="info-box info">
-                <div class="box-title">Need Help?</div>
-                If you encounter issues not covered in this guide, please contact your system administrator or the development team with:
-                <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li>A description of the problem</li>
-                    <li>The exact error message (if any)</li>
-                    <li>Your Excel file (if possible)</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="thanks">Thank you for using StimuPop!</div>
-            <div class="version-info">Version 6.1.0 | Last Updated: January 2026</div>
-            <div class="footer-links">
-                <a href="#introduction" class="footer-link">Introduction</a>
-                <a href="#getting-started" class="footer-link">Getting Started</a>
-                <a href="#troubleshooting" class="footer-link">Troubleshooting</a>
-                <a href="#quick-reference" class="footer-link">Quick Reference</a>
-            </div>
-            <div class="attribution">
-                Crafted with care for seamless Excel-to-PowerPoint workflows
-            </div>
-        </footer>
-    </main>
-
-    <script>
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const body = document.body;
-
-        // Check for saved preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            body.classList.add('dark-mode');
-            darkModeToggle.checked = true;
-        }
-
-        darkModeToggle.addEventListener('change', () => {
-            body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
-        });
-
-        // Back to Top Button
-        const backToTop = document.getElementById('backToTop');
-
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 400) {
-                backToTop.classList.add('visible');
-            } else {
-                backToTop.classList.remove('visible');
-            }
-        });
-
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        // Active Navigation Highlighting
-        const sections = document.querySelectorAll('section[id]');
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        function highlightNav() {
-            const scrollY = window.scrollY;
-
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop - 100;
-                const sectionHeight = section.offsetHeight;
-                const sectionId = section.getAttribute('id');
-
-                if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
-                    navLinks.forEach(link => {
-                        link.classList.remove('active');
-                        if (link.getAttribute('href') === '#' + sectionId) {
-                            link.classList.add('active');
-                        }
-                    });
-                }
-            });
-        }
-
-        window.addEventListener('scroll', highlightNav);
-        highlightNav(); // Initial call
-
-        // Intersection Observer for Scroll Animations
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animationDelay = '0.1s';
-                    entry.target.style.animationPlayState = 'running';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.animate-fade-in-up, .animate-fade-in, .animate-slide-in-left').forEach(el => {
-            el.style.animationPlayState = 'paused';
-            observer.observe(el);
-        });
-    </script>
 </body>
 </html>

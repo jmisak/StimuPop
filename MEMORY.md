@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 6.1.0
+**Current Version:** 6.2.0
 
 ## Architecture Decisions
 
@@ -214,6 +214,55 @@ xl/media/image1.png (extracted via zipfile)
 - Simple mode (default): Just vertical/horizontal alignment dropdowns
 - Advanced mode (checkbox): Adds per-column position expanders
 - Column defaults: E at 5.0", F at 6.5" (based on DR's variety card layout)
+
+**UI Location**: `app.py:render_advanced_settings()`
+
+### 15. Pictures Only Mode (v6.2.0)
+**Decision**: Add checkbox to skip all text columns and create image-only slides.
+
+**Rationale**:
+- Users need to create photo albums and image galleries without text
+- Existing workflow required manually clearing text columns or ignoring output
+- Simple toggle provides clear intent
+
+**Implementation**:
+- `SlideConfig.pictures_only`: Boolean (default False)
+- When enabled, `text_columns` parameter is ignored
+- Only image column is processed for each slide
+- Text box creation is skipped entirely
+
+**Code Location**: `src/pptx_generator.py:_create_slide()`
+
+### 16. Text Overflow Control (v6.2.0)
+**Decision**: Add dropdown to control text box overflow behavior.
+
+**Rationale**:
+- Long product descriptions or titles can exceed text box boundaries
+- Users need choice between preserving text size or preserving layout
+- PowerPoint supports multiple autofit modes
+
+**Implementation**:
+- `SlideConfig.text_overflow`: String ("resize" or "shrink")
+- "resize" (default): `MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT` - box expands
+- "shrink": `MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE` - text shrinks
+
+**Code Location**: `src/pptx_generator.py:_add_text()`
+
+### 17. Expanded Slider Ranges (v6.2.0)
+**Decision**: Expand minimum/maximum values for dimension sliders.
+
+**Rationale**:
+- Users requested thumbnail-sized images (smaller than 2 inches)
+- Text at absolute top of slide requires 0.0 starting position
+- Larger font sizes needed for title slides and headlines
+
+**Changes**:
+| Slider | Old Min | New Min | Old Max | New Max |
+|--------|---------|---------|---------|---------|
+| Image Width | 2.0 | 0.0 | 9.0 | 9.0 |
+| Image Height | 2.0 | 0.0 | 7.0 | 7.0 |
+| Text Top | 1.0 | 0.0 | 9.0 | 9.0 |
+| Font Size | 10 | 8 | 32 | 48 |
 
 **UI Location**: `app.py:render_advanced_settings()`
 

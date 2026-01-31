@@ -152,7 +152,7 @@ class ExcelProcessor:
                 details=f"Available columns: {available_columns}"
             )
 
-        # Resolve text columns
+        # Resolve text columns (can be empty for Pictures Only mode)
         resolved_text = []
         for col in text_columns:
             resolved = self._resolve_column(df, col, available_columns)
@@ -161,7 +161,8 @@ class ExcelProcessor:
             else:
                 resolved_text.append(resolved)
 
-        if not resolved_text:
+        # Allow empty text columns for Pictures Only mode (NEW in v6.2)
+        if not resolved_text and text_columns:
             raise ExcelValidationError(
                 "No valid text columns found",
                 details=f"Requested: {text_columns}, Available: {available_columns}"

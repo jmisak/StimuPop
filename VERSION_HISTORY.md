@@ -1,5 +1,66 @@
 # Version History
 
+## [2026-01-30] - v6.2.0: Pictures Only Mode & Text Overflow Control
+
+### Summary
+Feature release adding Pictures Only mode for image-only slideshows, Text Overflow control options, expanded UI slider ranges, and improved label clarity throughout the interface.
+
+### Features Added
+- **Pictures Only Mode**: New checkbox "Pictures Only (no text)" in Basic Configuration
+  - When enabled, text columns are skipped entirely
+  - Use case: Creating image-only slideshows, photo albums, image catalogs
+  - Text Columns setting is ignored when enabled
+- **Text Overflow Option**: New dropdown in Advanced Settings under Text Spacing
+  - "Resize shape to fit text" (default): Text box expands to fit content
+  - "Shrink text on overflow": Text shrinks to fit within boundaries
+  - Gives users control over how long text is handled
+
+### UI Improvements
+- **Image Width/Height Sliders**: Minimum changed from 2.0 to 0.0 inches
+  - Allows thumbnail-sized images for compact layouts
+- **Text Top Position Slider**: Minimum changed from 1.0 to 0.0 inches
+  - Allows text to be positioned at the very top of the slide
+- **Font Size Range**: Expanded from 10-32pt to 8-48pt
+  - Supports both smaller captions and larger headlines
+- **Label Clarifications**:
+  - Image Sizing: Removed "(Blank mode only)" - works for both Blank and Template modes
+  - Layout Position: Added "(Blank mode only)" label for clarity
+  - Image Alignment: Added "(Blank mode only)" label for clarity
+
+### Documentation Updates
+- Added Template Mode summary section in Advanced Settings
+- Moved Image Alignment explanation after Layout Position for better flow
+- Added Text Spacing section with Paragraph Spacing and Text Overflow documentation
+- Added Column Flexibility section clarifying Excel column requirements
+- Updated all version references to 6.2.0
+
+### Technical Details
+
+#### New Configuration Options
+| Option | Location | Values | Default |
+|--------|----------|--------|---------|
+| `pictures_only` | Basic Config | Boolean | False |
+| `text_overflow` | Advanced > Text Spacing | "resize" / "shrink" | "resize" |
+
+#### Slider Range Changes
+| Slider | Old Range | New Range |
+|--------|-----------|-----------|
+| Image Width | 2.0-9.0 | 0.0-9.0 |
+| Image Height | 2.0-7.0 | 0.0-7.0 |
+| Text Top Position | 1.0-9.0 | 0.0-9.0 |
+| Font Size | 10-32 | 8-48 |
+
+### Files Modified
+- `app.py` - UI changes for new features and slider ranges
+- `src/pptx_generator.py` - Pictures Only and Text Overflow implementation
+- `create_user_guide.py` - Documentation generator updates
+- `StimuPop_User_Guide.docx` - Regenerated with v6.2.0 content
+- `StimuPop_User_Guide.html` - New HTML version of user guide
+- `VERSION_HISTORY.md` - This changelog
+- `MEMORY.md` - Architecture decisions for new features
+
+---
+
 ## [2026-01-30] - v6.1.0: User Guide Documentation Update
 
 ### Summary

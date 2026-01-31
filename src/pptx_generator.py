@@ -21,7 +21,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 from PIL import Image
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.dml.color import RGBColor
 
@@ -149,6 +149,8 @@ class SlideConfig:
     image_alignment: Optional[ImageAlignment] = None  # None = center (legacy behavior)
     column_positions: Optional[Dict[str, ColumnPosition]] = None  # None = auto flow all
     positioning_mode: str = "simple"  # simple | advanced
+    # NEW in v6.2 - Text overflow handling
+    text_overflow_mode: Optional[str] = None  # None = resize shape, "shrink" = shrink text
 
     def get_column_format(self, column: str) -> ColumnFormat:
         """Get format for column, falling back to defaults."""
@@ -890,6 +892,10 @@ class PPTXGenerator:
         text_frame = textbox.text_frame
         text_frame.word_wrap = True
 
+        # Set text overflow mode (NEW in v6.2)
+        if self.config.text_overflow_mode == "shrink":
+            text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+
         for i, item in enumerate(text_items):
             if isinstance(item, dict):
                 text = item.get("text", "")
@@ -943,6 +949,10 @@ class PPTXGenerator:
 
         text_frame = textbox.text_frame
         text_frame.word_wrap = True
+
+        # Set text overflow mode (NEW in v6.2)
+        if self.config.text_overflow_mode == "shrink":
+            text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
 
         p = text_frame.paragraphs[0]
         run = p.add_run()

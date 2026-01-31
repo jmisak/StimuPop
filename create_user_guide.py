@@ -183,7 +183,7 @@ def create_user_guide():
     set_cell_shading(version_cell, "E7F3FF")
     version_para = version_cell.paragraphs[0]
     version_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_run = version_para.add_run("Version 6.1.0")
+    version_run = version_para.add_run("Version 6.2.0")
     version_run.font.size = Pt(14)
     version_run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
 
@@ -335,6 +335,26 @@ def create_user_guide():
     add_warning_box(doc, "Images embedded directly in Excel cells provide the most consistent results. "
                         "File paths must be accessible from the computer running StimuPop.")
 
+    # Column Flexibility note (Item #19)
+    create_styled_heading(doc, "Column Flexibility", 2)
+
+    doc.add_paragraph("Your Excel file can have any number of columns. StimuPop is flexible about your data structure:")
+
+    flex_points = [
+        "Add as many text columns as you need (C, D, E, F, G, etc.)",
+        "Skip columns you do not want to include in the presentation",
+        "Use column letters (B, C, D) or column header names (Image, Title, Description)",
+        "Columns can be in any order - just specify the correct references",
+        "Empty cells are handled gracefully (no errors for missing data)",
+    ]
+
+    for point in flex_points:
+        p = doc.add_paragraph(style='List Bullet')
+        p.add_run(point)
+
+    doc.add_paragraph()
+    add_tip_box(doc, "You only need to specify the columns you want to use. StimuPop ignores all other columns in your Excel file.")
+
     # ========== SECTION 4: USING STIMUPOP ==========
     doc.add_page_break()
     create_styled_heading(doc, "4. Using StimuPop", 1)
@@ -384,7 +404,8 @@ def create_user_guide():
     basic_settings = [
         ("Image Column", "Letter (A-Z) or name of the column containing images", "B"),
         ("Text Columns", "Comma-separated list of columns for text content", "C,D,E,F"),
-        ("Font Size", "Default font size for all text (10-32pt)", "14"),
+        ("Font Size", "Default font size for all text (8-48pt)", "14"),
+        ("Pictures Only", "Skip all text columns and create image-only slides", "Off"),
     ]
 
     settings_table = doc.add_table(rows=len(basic_settings)+1, cols=3)
@@ -405,44 +426,56 @@ def create_user_guide():
 
     doc.add_paragraph()
 
-    create_styled_heading(doc, "Advanced Settings", 2)
+    # Pictures Only Mode (NEW in v6.2)
+    create_styled_heading(doc, "Pictures Only Mode (New in v6.2)", 3)
 
-    doc.add_paragraph("Click 'Advanced Settings' to access layout, image sizing, and alignment options:")
+    doc.add_paragraph("Enable 'Pictures Only (no text)' checkbox to create image-only slideshows:")
 
-    # Image Alignment subsection (NEW in v6.0)
-    create_styled_heading(doc, "Image Alignment (New in v6.0)", 3)
-
-    doc.add_paragraph("Control how images are positioned within their bounding box:")
-
-    # Alignment options table
-    align_table = doc.add_table(rows=3, cols=2)
-    align_table.style = 'Table Grid'
-
-    align_options = [
-        ("Alignment Type", "Options"),
-        ("Vertical Alignment", "Top, Center (default), Bottom"),
-        ("Horizontal Alignment", "Left, Center (default), Right"),
+    pictures_only_uses = [
+        "Photo albums and image galleries",
+        "Product image catalogs without descriptions",
+        "Visual presentations where text is unnecessary",
+        "Quick image slideshows from Excel collections",
     ]
 
-    for idx, (opt_type, options) in enumerate(align_options):
-        if idx == 0:
-            set_cell_shading(align_table.cell(idx, 0), "2E74B5")
-            set_cell_shading(align_table.cell(idx, 1), "2E74B5")
-            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-            align_table.cell(idx, 1).paragraphs[0].add_run(options).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-            align_table.cell(idx, 0).paragraphs[0].runs[0].bold = True
-            align_table.cell(idx, 1).paragraphs[0].runs[0].bold = True
-        else:
-            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).bold = True
-            align_table.cell(idx, 1).paragraphs[0].add_run(options)
+    for use in pictures_only_uses:
+        p = doc.add_paragraph(style='List Bullet')
+        p.add_run(use)
 
     doc.add_paragraph()
-    add_tip_box(doc, "Use 'Bottom' vertical alignment for variety cards where you want images anchored to the bottom of the image area, regardless of image height.")
+    add_tip_box(doc, "When Pictures Only mode is enabled, the Text Columns setting is ignored. Only the Image Column is used to create slides.")
+
+    create_styled_heading(doc, "Advanced Settings", 2)
+
+    doc.add_paragraph("Click 'Advanced Settings' to access template mode, layout, image sizing, text spacing, and alignment options:")
+
+    # Template Mode Summary (Item #15)
+    create_styled_heading(doc, "Template Mode", 3)
+
+    doc.add_paragraph("StimuPop offers two generation modes for creating slides:")
+
+    template_modes = [
+        ("Blank Mode (default)", "Creates slides from scratch with configurable layout. You control image position, text position, fonts, and colors. Best for new presentations or when you need full control over styling."),
+        ("Template Mode", "Uses an existing PowerPoint template slide as the base. StimuPop clones the template for each row and populates placeholders with your data. Best when you have an existing design you want to preserve exactly."),
+    ]
+
+    for mode, desc in template_modes:
+        p = doc.add_paragraph()
+        p.add_run(f"{mode}: ").bold = True
+        p.add_run(desc)
+
+    doc.add_paragraph()
+    add_info_box(doc, "Template Mode Settings",
+                 "When using Template Mode:\n"
+                 "- Upload a .pptx template with your desired slide design\n"
+                 "- Specify the Image Placeholder Name (shape containing the image)\n"
+                 "- Specify the Text Placeholder Name (shape containing text)\n"
+                 "- StimuPop preserves all template formatting (fonts, sizes, colors)")
 
     # Image Sizing subsection
     create_styled_heading(doc, "Image Sizing", 3)
 
-    doc.add_paragraph("Control how images are sized uniformly across all slides:")
+    doc.add_paragraph("Control how images are sized uniformly across all slides. These settings work in both Blank and Template modes:")
 
     # Size modes table
     size_modes_table = doc.add_table(rows=5, cols=2)
@@ -469,27 +502,100 @@ def create_user_guide():
             size_modes_table.cell(idx, 1).paragraphs[0].add_run(desc)
 
     doc.add_paragraph()
+
+    doc.add_paragraph("Image dimension sliders (updated in v6.2):")
+    img_sliders = [
+        ("Max Width", "0.0 - 9.0 inches (0 allows thumbnail-sized images)"),
+        ("Max Height", "0.0 - 7.0 inches (0 allows thumbnail-sized images)"),
+    ]
+    for slider, range_desc in img_sliders:
+        p = doc.add_paragraph()
+        p.add_run(f"- {slider}: ").bold = True
+        p.add_run(range_desc)
+
+    doc.add_paragraph()
     add_tip_box(doc, "Use 'Fit to Box' mode for product catalogs and photo albums where you want all images to appear the same size regardless of their original dimensions.")
 
     # Layout settings
-    create_styled_heading(doc, "Layout Position Settings (Blank Mode Only)", 3)
+    create_styled_heading(doc, "Layout Position (Blank Mode Only)", 3)
 
-    doc.add_paragraph("These settings are only available when using Blank slide mode (not Template mode):")
+    doc.add_paragraph("These settings control slide layout and are only available when using Blank slide mode (not Template mode):")
 
     advanced_settings = [
-        ("Max Width", "Maximum image width (2.0-9.0 inches)", "5.5 inches"),
-        ("Max Height", "Maximum image height (2.0-7.0 inches)", "4.0 inches"),
         ("Image Top Position", "Distance from top of slide to image", "0.5 inches"),
-        ("Text Top Position", "Distance from top of slide to text area", "5.0 inches"),
+        ("Text Top Position", "Distance from top of slide to text area (0.0-9.0 inches)", "5.0 inches"),
         ("Slide Orientation", "Portrait (tall) or Landscape (wide)", "Portrait"),
     ]
 
     for setting, desc, default in advanced_settings:
         p = doc.add_paragraph()
-        p.add_run(f"• {setting}: ").bold = True
+        p.add_run(f"- {setting}: ").bold = True
         p.add_run(f"{desc} (Default: {default})")
 
     doc.add_paragraph()
+
+    # Image Alignment subsection (Moved after Layout Position per item #16)
+    create_styled_heading(doc, "Image Alignment (Blank Mode Only)", 3)
+
+    doc.add_paragraph("Control how images are positioned within their bounding box. These settings only apply to Blank mode:")
+
+    # Alignment options table
+    align_table = doc.add_table(rows=3, cols=2)
+    align_table.style = 'Table Grid'
+
+    align_options = [
+        ("Alignment Type", "Options"),
+        ("Vertical Alignment", "Top, Center (default), Bottom"),
+        ("Horizontal Alignment", "Left, Center (default), Right"),
+    ]
+
+    for idx, (opt_type, options) in enumerate(align_options):
+        if idx == 0:
+            set_cell_shading(align_table.cell(idx, 0), "2E74B5")
+            set_cell_shading(align_table.cell(idx, 1), "2E74B5")
+            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            align_table.cell(idx, 1).paragraphs[0].add_run(options).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            align_table.cell(idx, 0).paragraphs[0].runs[0].bold = True
+            align_table.cell(idx, 1).paragraphs[0].runs[0].bold = True
+        else:
+            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).bold = True
+            align_table.cell(idx, 1).paragraphs[0].add_run(options)
+
+    doc.add_paragraph()
+    add_tip_box(doc, "Use 'Bottom' vertical alignment for variety cards where you want images anchored to the bottom of the image area, regardless of image height.")
+
+    # Text Spacing subsection (Item #17 and #21)
+    create_styled_heading(doc, "Text Spacing", 3)
+
+    doc.add_paragraph("Control spacing and overflow behavior for text content:")
+
+    text_spacing_settings = [
+        ("Paragraph Spacing", "Space after each paragraph (0-24pt). Default 0pt means no extra spacing between lines."),
+        ("Text Overflow", "How text boxes handle content that exceeds the box size:"),
+    ]
+
+    for setting, desc in text_spacing_settings:
+        p = doc.add_paragraph()
+        p.add_run(f"- {setting}: ").bold = True
+        p.add_run(desc)
+
+    # Text Overflow options (NEW in v6.2)
+    doc.add_paragraph()
+    overflow_options = [
+        ("Resize shape to fit text (default)", "The text box expands to fit all content. Text remains at original size."),
+        ("Shrink text on overflow", "Text automatically shrinks to fit within the text box boundaries."),
+    ]
+
+    for opt, desc in overflow_options:
+        p = doc.add_paragraph()
+        p.add_run(f"    - {opt}: ").bold = True
+        p.add_run(desc)
+
+    doc.add_paragraph()
+    add_info_box(doc, "Text Overflow (New in v6.2)",
+                 "The Text Overflow dropdown gives you control over how StimuPop handles long text that exceeds the text box. "
+                 "'Resize shape to fit text' keeps text readable but may extend beyond the slide. "
+                 "'Shrink text on overflow' keeps text within bounds but may make it smaller.")
 
     # Advanced Positioning (NEW in v6.0)
     create_styled_heading(doc, "Advanced Positioning (New in v6.0)", 3)
@@ -526,7 +632,7 @@ def create_user_guide():
 
     doc.add_paragraph("When using Blank mode, you can customize each text column individually in Advanced Settings:")
 
-    format_options = ["Font size (8-48pt)", "Font family (Calibri, Arial, Times New Roman, etc.)",
+    format_options = ["Font size (8-48pt, expanded range in v6.2)", "Font family (Calibri, Arial, Times New Roman, etc.)",
                       "Text color (color picker)", "Bold and Italic styles"]
 
     for opt in format_options:
@@ -662,7 +768,7 @@ def create_user_guide():
 
     version_final = doc.add_paragraph()
     version_final.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_final.add_run("Version 6.1.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    version_final.add_run("Version 6.2.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
     # Save document
     doc.save('StimuPop_User_Guide.docx')
