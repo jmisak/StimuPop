@@ -1,5 +1,5 @@
 """
-PowerPoint generation for StimuPop v6.1.
+PowerPoint generation for StimuPop v7.0.
 
 Provides presentation creation with:
 - Template-based generation
@@ -581,9 +581,37 @@ class PPTXGenerator:
                 # Legacy format - just use index
                 pass
 
-        # Map template paragraphs to columns
-        # Based on Variety Card: P0->C, P1->D, P2->empty, P3->E, P4->empty, P5->F
-        column_sequence = ["C", "D", "", "E", "", "F"]
+        # Dynamically map template paragraphs to user's columns (v7.0 fix)
+        # Strategy: Detect spacer paragraphs (empty in template) and map user columns to content paragraphs
+
+        # Build column sequence dynamically from user's text columns
+        user_columns = list(content_map.keys())  # Columns that have data
+
+        # Analyze template to find spacer positions (paragraphs with empty text in template)
+        spacer_indices = set()
+        for i, para_data in enumerate(template_paragraphs):
+            # A paragraph is a spacer if all its runs have empty or whitespace-only text
+            is_spacer = True
+            for run_data in para_data.get('runs', []):
+                if run_data.get('text', '').strip():
+                    is_spacer = False
+                    break
+            if is_spacer and not para_data.get('runs'):
+                is_spacer = True  # Empty paragraph with no runs is a spacer
+            if is_spacer:
+                spacer_indices.add(i)
+
+        # Build dynamic column sequence: user columns go to non-spacer positions
+        column_sequence = []
+        user_col_idx = 0
+        for i in range(len(template_paragraphs)):
+            if i in spacer_indices:
+                column_sequence.append("")  # Spacer
+            elif user_col_idx < len(user_columns):
+                column_sequence.append(user_columns[user_col_idx])
+                user_col_idx += 1
+            else:
+                column_sequence.append("")  # No more user columns
 
         for i, para_data in enumerate(template_paragraphs):
             if i == 0:

@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 6.2.0
+**Current Version:** 7.0.0
 
 ## Architecture Decisions
 
@@ -265,6 +265,55 @@ xl/media/image1.png (extracted via zipfile)
 | Font Size | 10 | 8 | 32 | 48 |
 
 **UI Location**: `app.py:render_advanced_settings()`
+
+### 18. Dynamic Template Column Mapping (v7.0.0)
+**Decision**: Replace hardcoded column sequence with dynamic spacer detection and column mapping.
+
+**Rationale**:
+- Bug #22: Template Mode assumed columns were always C, D, E, F with spacers at positions 2 and 4
+- Users with different column letters (e.g., B, C) or different column counts experienced broken output
+- Hardcoded sequence `["C", "D", "", "E", "", "F"]` was not flexible
+
+**Problem Analysis**:
+```
+Hardcoded Assumption:
+  Paragraph 0 → Column C
+  Paragraph 1 → Column D
+  Paragraph 2 → (spacer)
+  Paragraph 3 → Column E
+  Paragraph 4 → (spacer)
+  Paragraph 5 → Column F
+
+Reality: Users may have columns B, C, D or A, B, C, D, E, F, G...
+```
+
+**Solution**:
+1. **Spacer Detection**: Analyze template paragraphs; empty text indicates spacer position
+2. **Non-Spacer Enumeration**: Build list of paragraph indices that are NOT spacers
+3. **Dynamic Mapping**: Map user columns (in order) to non-spacer positions (in order)
+
+**Implementation**:
+```python
+# Detect spacers from template
+spacer_positions = {i for i, p in enumerate(template_paragraphs)
+                    if not p.text.strip()}
+
+# Get usable positions
+non_spacer_positions = [i for i in range(len(paragraphs))
+                        if i not in spacer_positions]
+
+# Map columns dynamically
+for idx, col in enumerate(user_columns):
+    if idx < len(non_spacer_positions):
+        paragraphs[non_spacer_positions[idx]].text = content_map[col]
+```
+
+**Breaking Change Justification**:
+- This is a behavioral change that warrants major version bump
+- Users who created workarounds for the bug may see different results
+- More correct behavior overall, but edge cases may need review
+
+**Code Location**: `src/pptx_generator.py` lines 584-615
 
 ## Coding Conventions
 

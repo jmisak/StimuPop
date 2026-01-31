@@ -1,5 +1,109 @@
 # Version History
 
+## [2026-01-31] - v7.0.0: Template Mode Dynamic Column Mapping (Breaking Change)
+
+### Summary
+Major version release fixing a critical bug in Template Mode where hardcoded column sequence assumptions broke presentations with non-standard column configurations. This release introduces dynamic column mapping that correctly handles any user-defined column letters and properly detects spacer paragraphs in templates.
+
+### Critical Bug Fix (Issue #22)
+
+**Problem**: Template Mode had a hardcoded column sequence `["C", "D", "", "E", "", "F"]` that assumed:
+- Paragraph 0 mapped to Column C
+- Paragraph 1 mapped to Column D
+- Paragraph 2 was an empty spacer
+- Paragraph 3 mapped to Column E
+- Paragraph 4 was an empty spacer
+- Paragraph 5 mapped to Column F
+
+This broke when users had different column configurations (e.g., columns B and C, or a different number of text columns). Users with non-standard setups would see incorrect text placement or missing content.
+
+**Solution**: Implemented dynamic column mapping that:
+1. Analyzes template paragraphs to detect which are spacers (empty text in template)
+2. Identifies non-spacer paragraph positions dynamically
+3. Maps user's actual columns to non-spacer paragraph positions in order
+4. Works with any column letters and any number of columns
+
+### Technical Details
+
+#### Affected Code
+- **File**: `src/pptx_generator.py`
+- **Lines**: 584-615 (Template Mode column mapping logic)
+
+#### Before (Hardcoded)
+```python
+column_sequence = ["C", "D", "", "E", "", "F"]
+for i, col in enumerate(column_sequence):
+    if col and col in content_map:
+        paragraphs[i].text = content_map[col]
+```
+
+#### After (Dynamic)
+```python
+# Step 1: Detect spacer positions from template
+spacer_positions = set()
+for i, para in enumerate(template_paragraphs):
+    if not para.text.strip():
+        spacer_positions.add(i)
+
+# Step 2: Build list of non-spacer positions
+non_spacer_positions = [i for i in range(len(paragraphs))
+                        if i not in spacer_positions]
+
+# Step 3: Map user columns to non-spacer positions in order
+user_columns = list(content_map.keys())
+for idx, col in enumerate(user_columns):
+    if idx < len(non_spacer_positions):
+        para_index = non_spacer_positions[idx]
+        paragraphs[para_index].text = content_map[col]
+```
+
+#### Algorithm Flow
+```
+Template Analysis:
+  P0: "Brand Name"     → non-spacer → position 0
+  P1: "Product Name"   → non-spacer → position 1
+  P2: ""               → SPACER     → skip
+  P3: "Size Info"      → non-spacer → position 2
+  P4: ""               → SPACER     → skip
+  P5: "Description"    → non-spacer → position 3
+
+User Content Map: {"B": "Acme", "C": "Widget", "D": "Large", "E": "Details"}
+
+Dynamic Mapping:
+  Column B → non_spacer_positions[0] → P0
+  Column C → non_spacer_positions[1] → P1
+  Column D → non_spacer_positions[2] → P3 (skips P2 spacer)
+  Column E → non_spacer_positions[3] → P5 (skips P4 spacer)
+```
+
+### Why Major Version (v7.0.0)
+
+This release is marked as a **major version** because:
+
+1. **Behavioral Change**: Template Mode now works fundamentally differently in how it maps columns to paragraphs
+
+2. **Potential Breaking Change**: Users who had worked around the bug by:
+   - Specifically using columns C, D, E, F to match the hardcoded sequence
+   - Adding dummy columns to align with expected positions
+   - Restructuring their templates to match the assumed layout
+
+   These workarounds may now produce different (more correct) results
+
+3. **Edge Case Considerations**: Templates with unusual spacer patterns may render differently than before
+
+### Migration Notes
+
+- **Standard Users (C/D/E/F columns)**: No action required; behavior unchanged for the original assumed configuration
+- **Non-Standard Column Users**: Presentations should now work correctly without workarounds
+- **Workaround Users**: Review generated output; remove any dummy columns or template modifications made to accommodate the bug
+
+### Files Modified
+- `src/pptx_generator.py` - Dynamic column mapping implementation
+- `VERSION_HISTORY.md` - This changelog
+- `MEMORY.md` - Architecture decision #18
+
+---
+
 ## [2026-01-30] - v6.2.0: Pictures Only Mode & Text Overflow Control
 
 ### Summary

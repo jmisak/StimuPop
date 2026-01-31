@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 6.2.0
+Version: 7.0.0
 """
 
 import tempfile
@@ -61,7 +61,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v6.2",
+    page_title="StimuPop v7.0",
     page_icon="🎯",
     layout="wide"
 )
@@ -76,7 +76,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v6.2")
+    st.title("🎯 StimuPop v7.0")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -877,7 +877,7 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v6.2.0 |"
+        "🎯 StimuPop v7.0.0 |"
         "Image Alignment + Fixed Positioning | "
         "Built with Streamlit"
         "</p>",
