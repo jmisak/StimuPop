@@ -1,10 +1,12 @@
 """
-PowerPoint generation for StimuPop v5.1.
+PowerPoint generation for StimuPop v6.1.
 
 Provides presentation creation with:
-- Template-based generation (NEW)
-- Placeholder detection and population (NEW)
-- Configurable paragraph spacing (NEW)
+- Template-based generation
+- Placeholder detection and population
+- Configurable paragraph spacing
+- Configurable image alignment (v6.0)
+- Per-column fixed positioning (v6.0)
 - Embedded image support
 - Local file path support
 - Configurable layout
@@ -16,8 +18,6 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
-from copy import deepcopy
-
 from PIL import Image
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
@@ -393,7 +393,7 @@ class PPTXGenerator:
                         }
                         try:
                             run_data['color'] = run.font.color.rgb
-                        except:
+                        except (AttributeError, TypeError):
                             run_data['color'] = None
                         para_data['runs'].append(run_data)
                     shape_data['paragraphs'].append(para_data)

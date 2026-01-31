@@ -336,6 +336,7 @@ class ImageLoader:
         """
         results: Dict[str, ImageResult] = {}
 
+        wb = None
         try:
             wb = load_workbook(BytesIO(excel_bytes))
             sheet = wb.active
@@ -373,6 +374,9 @@ class ImageLoader:
 
         except Exception as e:
             logger.error(f"Error extracting embedded images: {e}")
+        finally:
+            if wb is not None:
+                wb.close()
 
         return results
 

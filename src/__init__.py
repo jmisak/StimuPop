@@ -1,16 +1,16 @@
 """
-StimuPop - Source Package v6.0
+StimuPop - Source Package v6.1
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
+
+New in v6.1:
+- UI improvements and documentation updates
+- Layout Position controls hidden in Template mode
 
 New in v6.0:
 - Configurable image alignment (top/center/bottom, left/center/right)
 - Per-column fixed text positioning
 - Simple/Advanced positioning modes
-
-New in v5.1:
-- Template-based placeholder population
-- Configurable paragraph spacing
 """
 
 from .exceptions import (
@@ -84,4 +84,4 @@ __all__ = [
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "6.0.0"
+__version__ = "6.1.0"

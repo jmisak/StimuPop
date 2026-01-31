@@ -183,7 +183,7 @@ def create_user_guide():
     set_cell_shading(version_cell, "E7F3FF")
     version_para = version_cell.paragraphs[0]
     version_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_run = version_para.add_run("Version 2.3.0")
+    version_run = version_para.add_run("Version 6.1.0")
     version_run.font.size = Pt(14)
     version_run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
 
@@ -251,14 +251,16 @@ def create_user_guide():
     install_steps = [
         ("1", "Extract the ZIP file to any folder on your computer"),
         ("2", "Open the extracted folder"),
-        ("3", "Double-click 'StimuPop.bat' to launch the application"),
-        ("4", "Wait for your web browser to open automatically"),
+        ("3", "Double-click 'StimuPop.exe' (or 'StimuPop.bat') to launch the application"),
+        ("4", "Wait for the terminal window to display 'Server ready!' message"),
+        ("5", "Hold Ctrl and click the localhost link in the terminal, OR copy the URL and paste it into your browser"),
     ]
     add_step_table(doc, install_steps)
 
     add_info_box(doc, "📌 First Launch",
-                 "The first time you run StimuPop, it may take 1-2 minutes to initialize. "
-                 "Subsequent launches will be much faster.")
+                 "The first time you run StimuPop, the server may take 30-60 seconds to start. "
+                 "Wait for the 'Server ready!' message before clicking the link. "
+                 "Subsequent launches will be faster.")
 
     create_styled_heading(doc, "System Requirements", 2)
 
@@ -341,15 +343,16 @@ def create_user_guide():
     create_styled_heading(doc, "Step-by-Step Guide", 2)
 
     usage_steps = [
-        ("1", "Launch StimuPop by double-clicking 'StimuPop.bat'"),
-        ("2", "Click 'Browse files' under 'Upload Excel File' and select your .xlsx file"),
-        ("3", "Optionally upload a PowerPoint template for custom styling"),
-        ("4", "Set the Image Column (e.g., 'B' or the column header name)"),
-        ("5", "Set the Text Columns (e.g., 'C,D,E,F' for multiple columns)"),
-        ("6", "Adjust font size using the slider (default: 14pt)"),
-        ("7", "Click the blue 'Generate Presentation' button"),
-        ("8", "Wait for processing (progress bar shows status)"),
-        ("9", "Click 'Download Presentation' to save your .pptx file"),
+        ("1", "Launch StimuPop by double-clicking 'StimuPop.exe' and wait for 'Server ready!'"),
+        ("2", "Ctrl+click the localhost link (or copy/paste into browser)"),
+        ("3", "Click 'Browse files' under 'Upload Excel File' and select your .xlsx file"),
+        ("4", "Optionally upload a PowerPoint template for custom styling"),
+        ("5", "Set the Image Column (e.g., 'B' or the column header name)"),
+        ("6", "Set the Text Columns (e.g., 'C,D,E,F' for multiple columns)"),
+        ("7", "Adjust font size using the slider (default: 14pt)"),
+        ("8", "Click the blue 'Generate Presentation' button"),
+        ("9", "Wait for processing (progress bar shows status)"),
+        ("10", "Click 'Download Presentation' to save your .pptx file"),
     ]
     add_step_table(doc, usage_steps)
 
@@ -404,10 +407,40 @@ def create_user_guide():
 
     create_styled_heading(doc, "Advanced Settings", 2)
 
-    doc.add_paragraph("Click 'Advanced Settings' to access layout and image sizing options:")
+    doc.add_paragraph("Click 'Advanced Settings' to access layout, image sizing, and alignment options:")
+
+    # Image Alignment subsection (NEW in v6.0)
+    create_styled_heading(doc, "Image Alignment (New in v6.0)", 3)
+
+    doc.add_paragraph("Control how images are positioned within their bounding box:")
+
+    # Alignment options table
+    align_table = doc.add_table(rows=3, cols=2)
+    align_table.style = 'Table Grid'
+
+    align_options = [
+        ("Alignment Type", "Options"),
+        ("Vertical Alignment", "Top, Center (default), Bottom"),
+        ("Horizontal Alignment", "Left, Center (default), Right"),
+    ]
+
+    for idx, (opt_type, options) in enumerate(align_options):
+        if idx == 0:
+            set_cell_shading(align_table.cell(idx, 0), "2E74B5")
+            set_cell_shading(align_table.cell(idx, 1), "2E74B5")
+            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            align_table.cell(idx, 1).paragraphs[0].add_run(options).font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            align_table.cell(idx, 0).paragraphs[0].runs[0].bold = True
+            align_table.cell(idx, 1).paragraphs[0].runs[0].bold = True
+        else:
+            align_table.cell(idx, 0).paragraphs[0].add_run(opt_type).bold = True
+            align_table.cell(idx, 1).paragraphs[0].add_run(options)
+
+    doc.add_paragraph()
+    add_tip_box(doc, "Use 'Bottom' vertical alignment for variety cards where you want images anchored to the bottom of the image area, regardless of image height.")
 
     # Image Sizing subsection
-    create_styled_heading(doc, "Image Sizing (New in v2.3.0)", 3)
+    create_styled_heading(doc, "Image Sizing", 3)
 
     doc.add_paragraph("Control how images are sized uniformly across all slides:")
 
@@ -439,7 +472,9 @@ def create_user_guide():
     add_tip_box(doc, "Use 'Fit to Box' mode for product catalogs and photo albums where you want all images to appear the same size regardless of their original dimensions.")
 
     # Layout settings
-    create_styled_heading(doc, "Layout Position Settings", 3)
+    create_styled_heading(doc, "Layout Position Settings (Blank Mode Only)", 3)
+
+    doc.add_paragraph("These settings are only available when using Blank slide mode (not Template mode):")
 
     advanced_settings = [
         ("Max Width", "Maximum image width (2.0-9.0 inches)", "5.5 inches"),
@@ -456,9 +491,40 @@ def create_user_guide():
 
     doc.add_paragraph()
 
-    create_styled_heading(doc, "Per-Column Formatting", 3)
+    # Advanced Positioning (NEW in v6.0)
+    create_styled_heading(doc, "Advanced Positioning (New in v6.0)", 3)
 
-    doc.add_paragraph("In Advanced Settings, you can customize each text column individually:")
+    doc.add_paragraph("For precise control over text column placement, enable 'Advanced Positioning' by checking the checkbox in Advanced Settings. This reveals per-column position controls:")
+
+    position_modes = [
+        ("Auto (default)", "Text flows sequentially after the previous column. Position depends on content length of earlier columns."),
+        ("Fixed", "Text is placed at an exact position on the slide, regardless of other content. Creates a separate text box."),
+    ]
+
+    for mode, desc in position_modes:
+        p = doc.add_paragraph()
+        p.add_run(f"• {mode}: ").bold = True
+        p.add_run(desc)
+
+    doc.add_paragraph()
+    doc.add_paragraph("Default fixed positions (useful for variety cards):")
+
+    default_positions = [
+        ("Column E", "5.0 inches from top"),
+        ("Column F", "6.5 inches from top"),
+    ]
+
+    for col, pos in default_positions:
+        p = doc.add_paragraph()
+        p.add_run(f"• {col}: ").bold = True
+        p.add_run(pos)
+
+    doc.add_paragraph()
+    add_tip_box(doc, "Use Fixed positioning for columns E and F when you want them to appear in the same location on every slide, even if the Brand (C) and Product Name (D) vary in length.")
+
+    create_styled_heading(doc, "Per-Column Formatting (Blank Mode Only)", 3)
+
+    doc.add_paragraph("When using Blank mode, you can customize each text column individually in Advanced Settings:")
 
     format_options = ["Font size (8-48pt)", "Font family (Calibri, Arial, Times New Roman, etc.)",
                       "Text color (color picker)", "Bold and Italic styles"]
@@ -482,6 +548,8 @@ def create_user_guide():
          "• Check that antivirus isn't blocking the application"),
 
         ("Browser doesn't open automatically",
+         "• Wait for 'Server ready!' message in the terminal window\n"
+         "• Hold Ctrl and click the localhost link, or copy/paste the URL\n"
          "• Manually open your browser and go to: http://localhost:8501\n"
          "• Try a different browser (Chrome recommended)"),
 
@@ -594,7 +662,7 @@ def create_user_guide():
 
     version_final = doc.add_paragraph()
     version_final.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_final.add_run("Version 2.3.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    version_final.add_run("Version 6.1.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
     # Save document
     doc.save('StimuPop_User_Guide.docx')

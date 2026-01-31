@@ -1,5 +1,31 @@
 # Version History
 
+## [2026-01-30] - v6.1.0: User Guide Documentation Update
+
+### Summary
+Documentation update release addressing user feedback to improve clarity and usability of the User Guide. Updated for v6.1.0 with enhanced first-launch instructions and documentation of v6.0 features.
+
+### Documentation Updates
+- **Version**: Updated throughout to 6.1.0
+- **First Launch Instructions**: Clarified that users should wait for "Server ready!" message before clicking the localhost link
+- **Browser Access**: Added instructions to Ctrl+click the localhost link or copy/paste the URL into browser
+- **First-Launch Timing Note**: Clarified that server may take 30-60 seconds on first launch
+- **Layout Position Settings**: Added note that these settings only appear in Blank mode (not Template mode)
+- **Per-Column Formatting**: Added note that these settings only appear in Blank mode
+- **Image Alignment (v6.0)**: Documented vertical (Top/Center/Bottom) and horizontal (Left/Center/Right) alignment options
+- **Advanced Positioning (v6.0)**: Documented the Advanced Positioning checkbox and per-column position controls
+  - Auto vs Fixed positioning modes
+  - Default positions for Column E (5.0") and Column F (6.5")
+- **Step-by-Step Guide**: Updated from 9 steps to 10 steps to include waiting for server and Ctrl+click instructions
+
+### Files Modified
+- `create_user_guide.py` - Generator script updated with all documentation changes
+- `StimuPop_User_Guide.docx` - Regenerated with updated content
+- `MEMORY.md` - Version updated to 6.1.0
+- `VERSION_HISTORY.md` - Added v6.1.0 release notes
+
+---
+
 ## [2026-01-29] - v6.0.0: Configurable Positioning System
 
 ### Summary

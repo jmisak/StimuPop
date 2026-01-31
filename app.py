@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 6.0.0
+Version: 6.1.0
 """
 
 import tempfile
@@ -61,7 +61,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v5.1 Tester",
+    page_title="StimuPop v6.1",
     page_icon="🎯",
     layout="wide"
 )
@@ -76,7 +76,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v5.1 Tester")
+    st.title("🎯 StimuPop v6.1")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -174,8 +174,8 @@ def render_basic_config():
 
     font_size = st.slider(
         "Font Size (pt)",
-        min_value=10,
-        max_value=32,
+        min_value=8,
+        max_value=48,
         value=14,
         help="Default font size for text content (used in Blank mode)"
     )
@@ -252,7 +252,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
 
         # Image Sizing Section
         st.markdown("#### 🖼️ Image Sizing")
-        st.caption("Control how images are sized on each slide (Blank mode only)")
+        st.caption("Control how images are sized on each slide")
 
         size_col1, size_col2 = st.columns(2)
 
@@ -267,7 +267,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
 
             img_width = st.slider(
                 "Max Width (inches)",
-                min_value=2.0,
+                min_value=0.0,
                 max_value=9.0,
                 value=5.5,
                 step=0.25,
@@ -277,7 +277,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
         with size_col2:
             img_height = st.slider(
                 "Max Height (inches)",
-                min_value=2.0,
+                min_value=0.0,
                 max_value=7.0,
                 value=4.0,
                 step=0.25,
@@ -294,40 +294,47 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
             else:
                 st.warning("Images will be stretched to exact size (may distort)")
 
-        st.markdown("---")
-        st.markdown("#### 📍 Layout Position (Blank mode)")
-        adv_col1, adv_col2 = st.columns(2)
+        # Layout Position - only shown in Blank mode (values ignored in Template mode)
+        # Default values (used when Template mode selected)
+        img_top = 0.5
+        text_top = 5.0
+        orientation = "portrait"
 
-        with adv_col1:
-            img_top = st.slider(
-                "Image Top Position (inches)",
-                min_value=0.0,
-                max_value=3.0,
-                value=0.5,
-                step=0.25,
-                help="Distance from top of slide to image"
-            )
+        if template_mode == TEMPLATE_MODE_BLANK:
+            st.markdown("---")
+            st.markdown("#### 📍 Layout Position (Blank mode only)")
+            adv_col1, adv_col2 = st.columns(2)
 
-        with adv_col2:
-            text_top = st.slider(
-                "Text Top Position (inches)",
-                min_value=3.0,
-                max_value=8.0,
-                value=5.0,
-                step=0.5,
-                help="Distance from top of slide to text"
-            )
+            with adv_col1:
+                img_top = st.slider(
+                    "Image Top Position (inches)",
+                    min_value=0.0,
+                    max_value=3.0,
+                    value=0.5,
+                    step=0.25,
+                    help="Distance from top of slide to image"
+                )
 
-            orientation = st.selectbox(
-                "Slide Orientation",
-                options=["portrait", "landscape"],
-                index=0,
-                help="Portrait (tall) or Landscape (wide) slides"
-            )
+            with adv_col2:
+                text_top = st.slider(
+                    "Text Top Position (inches)",
+                    min_value=0.0,
+                    max_value=8.0,
+                    value=5.0,
+                    step=0.5,
+                    help="Distance from top of slide to text"
+                )
+
+                orientation = st.selectbox(
+                    "Slide Orientation",
+                    options=["portrait", "landscape"],
+                    index=0,
+                    help="Portrait (tall) or Landscape (wide) slides"
+                )
 
         # Image Alignment (NEW in v6.0)
         st.markdown("---")
-        st.markdown("#### 🎯 Image Alignment")
+        st.markdown("#### 🎯 Image Alignment (Blank mode only)")
         st.caption("Control how images are positioned within their bounding box")
 
         align_col1, align_col2 = st.columns(2)
@@ -748,14 +755,17 @@ def generate_presentation(
             )
 
         # Save to temporary file and provide download
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pptx') as tmp:
-            result.presentation.save(tmp.name)
-            tmp_path = tmp.name
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pptx') as tmp:
+                result.presentation.save(tmp.name)
+                tmp_path = tmp.name
 
-        with open(tmp_path, 'rb') as f:
-            pptx_data = f.read()
-
-        os.unlink(tmp_path)
+            with open(tmp_path, 'rb') as f:
+                pptx_data = f.read()
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
         # Download button
         output_filename = excel_file.name.rsplit('.', 1)[0] + '_presentation.pptx'
@@ -782,7 +792,7 @@ def render_instructions():
         st.markdown("""
 ### Instructions
 
-#### Template Mode (NEW in v5.1)
+#### Template Mode
 
 1. **Prepare your template:**
    - Create a PowerPoint slide with placeholder shapes
@@ -836,8 +846,8 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v5.1.0 Tester | "
-        "Template Mode + Configurable Spacing | "
+        "🎯 StimuPop v6.1.0 | "
+        "Image Alignment + Fixed Positioning | "
         "Built with Streamlit"
         "</p>",
         unsafe_allow_html=True

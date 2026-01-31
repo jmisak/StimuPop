@@ -5,6 +5,9 @@ This script launches the Streamlit app programmatically.
 
 import sys
 import os
+import time
+import threading
+import webbrowser
 
 # Determine paths based on whether we're frozen or running as script
 if getattr(sys, 'frozen', False):
@@ -29,14 +32,41 @@ sys.path.insert(0, bundle_dir)
 # Launch Streamlit
 from streamlit.web import cli as stcli
 
+
+def open_browser_when_ready(url: str, delay: float = 3.0):
+    """
+    Wait for server startup, then open browser.
+    Uses a simple time-based delay to avoid dependency on requests library.
+    """
+    print("Starting StimuPop server...")
+    time.sleep(delay)
+    print("Server ready! Opening browser...")
+    webbrowser.open(url)
+
+
 if __name__ == "__main__":
     app_path = os.path.join(bundle_dir, "app.py")
+
+    # Default Streamlit port
+    port = 8501
+    url = f"http://localhost:{port}"
+
+    # Start browser opener in background thread
+    browser_thread = threading.Thread(
+        target=open_browser_when_ready,
+        args=(url,),
+        daemon=True
+    )
+    browser_thread.start()
+
     sys.argv = [
         "streamlit",
         "run",
         app_path,
         "--server.headless", "true",
         "--browser.gatherUsageStats", "false",
+        "--browser.serverAddress", "localhost",
+        "--browser.serverPort", str(port),
         "--global.developmentMode", "false",
     ]
     sys.exit(stcli.main())

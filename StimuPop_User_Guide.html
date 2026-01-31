@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StimuPop User Guide - Version 6.1.0</title>
+    <style>
+        /* CSS Reset and Base Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-blue: #1a56db;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e40af;
+            --accent-cyan: #06b6d4;
+            --accent-cyan-light: #22d3ee;
+            --info-bg: #dbeafe;
+            --info-border: #1a56db;
+            --warning-bg: #fef3c7;
+            --warning-border: #d97706;
+            --tip-bg: #d1fae5;
+            --tip-border: #059669;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --success-green: #10b981;
+            --white: #ffffff;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark Mode Variables */
+        .dark-mode {
+            --primary-blue: #60a5fa;
+            --primary-blue-light: #93c5fd;
+            --primary-blue-dark: #3b82f6;
+            --accent-cyan: #22d3ee;
+            --accent-cyan-light: #67e8f9;
+            --info-bg: #1e3a5f;
+            --info-border: #60a5fa;
+            --warning-bg: #78350f;
+            --warning-border: #fbbf24;
+            --tip-bg: #064e3b;
+            --tip-border: #34d399;
+            --gray-50: #111827;
+            --gray-100: #1f2937;
+            --gray-200: #374151;
+            --gray-300: #4b5563;
+            --gray-400: #6b7280;
+            --gray-500: #9ca3af;
+            --gray-600: #d1d5db;
+            --gray-700: #e5e7eb;
+            --gray-800: #f3f4f6;
+            --gray-900: #f9fafb;
+            --white: #1f2937;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--gray-800);
+            background-color: var(--gray-100);
+            transition: background-color var(--transition-normal), color var(--transition-normal);
+        }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            padding: 8px 16px;
+            border-radius: 50px;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: 2px solid var(--gray-200);
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .dark-mode-toggle input {
+            display: none;
+        }
+
+        .toggle-track {
+            width: 48px;
+            height: 24px;
+            background: var(--gray-300);
+            border-radius: 12px;
+            position: relative;
+            transition: background var(--transition-normal);
+        }
+
+        .toggle-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--white);
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .dark-mode-toggle input:checked + .toggle-track {
+            background: var(--primary-blue);
+        }
+
+        .dark-mode-toggle input:checked + .toggle-track .toggle-thumb {
+            transform: translateX(24px);
+        }
+
+        .toggle-icon {
+            font-size: 18px;
+            transition: opacity var(--transition-normal);
+        }
+
+        .toggle-icon.sun { opacity: 1; }
+        .toggle-icon.moon { opacity: 0.5; }
+
+        .dark-mode .toggle-icon.sun { opacity: 0.5; }
+        .dark-mode .toggle-icon.moon { opacity: 1; }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary-blue-dark) 0%, #0f172a 100%);
+            padding: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .dark-mode .nav-sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+        }
+
+        .nav-logo {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-logo h1 {
+            color: var(--white);
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-logo h1::before {
+            content: "\26A1";
+            margin-right: 10px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-blue-light) 100%);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-menu li {
+            margin: 4px 12px;
+        }
+
+        .nav-menu a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all var(--transition-normal);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu a::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--accent-cyan), transparent);
+            opacity: 0.2;
+            transition: width var(--transition-normal);
+        }
+
+        .nav-menu a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--white);
+            transform: translateX(5px);
+        }
+
+        .nav-menu a:hover::before {
+            width: 100%;
+        }
+
+        .nav-menu a.active {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%);
+            color: var(--white);
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .nav-menu .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            margin-right: 12px;
+            transition: all var(--transition-normal);
+        }
+
+        .nav-menu a:hover .section-number,
+        .nav-menu a.active .section-number {
+            background: var(--accent-cyan);
+            color: var(--gray-900);
+        }
+
+        .nav-menu .nav-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 300px;
+            padding: 40px 60px 100px;
+            max-width: 1200px;
+            min-height: 100vh;
+        }
+
+        /* Animation Keyframes */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-slide-in-left {
+            animation: slideInLeft 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-blue-dark) 0%, #0f172a 50%, var(--primary-blue) 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 60px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(255,255,255,0.03) 50%,
+                transparent 60%
+            );
+            animation: shimmer 8s infinite linear;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 56px;
+            font-weight: 800;
+            border: none;
+            padding: 0;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .hero h1::before {
+            content: "\26A1";
+            margin-right: 15px;
+            filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.8));
+        }
+
+        .hero .subtitle {
+            font-size: 24px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .hero .tagline {
+            font-size: 18px;
+            opacity: 0.7;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary-blue-light) 100%);
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+            transition: all var(--transition-normal);
+        }
+
+        .hero .badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+        }
+
+        /* Feature Cards Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--transition-normal);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-cyan);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card .card-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            color: var(--gray-800);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--gray-600);
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Progress Tracker */
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 40px 0;
+            padding: 30px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            overflow-x: auto;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            min-width: 80px;
+        }
+
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 60%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue-light));
+            opacity: 0.3;
+        }
+
+        .step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+            transition: all var(--transition-normal);
+        }
+
+        .progress-step:hover .step-circle {
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .step-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            max-width: 80px;
+        }
+
+        /* Section Styling */
+        .section {
+            background: var(--white);
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+        }
+
+        .section:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 32px;
+            color: var(--primary-blue);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--accent-cyan), var(--primary-blue)) 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 .section-icon {
+            font-size: 28px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--primary-blue);
+            margin-top: 36px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--accent-cyan), var(--primary-blue));
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 18px;
+            color: var(--gray-700);
+            margin-top: 28px;
+            margin-bottom: 14px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--gray-700);
+        }
+
+        /* Collapsible/Accordion Sections */
+        .accordion {
+            margin: 20px 0;
+        }
+
+        .accordion-item {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .accordion-item:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-800);
+            transition: all var(--transition-normal);
+        }
+
+        .accordion-header:hover {
+            background: var(--gray-100);
+        }
+
+        .accordion-icon {
+            font-size: 20px;
+            transition: transform var(--transition-normal);
+        }
+
+        .accordion-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .accordion-item input[type="checkbox"]:checked ~ .accordion-content {
+            max-height: 2000px;
+            padding: 0 24px 24px;
+        }
+
+        .accordion-item input[type="checkbox"]:checked ~ .accordion-header .accordion-icon {
+            transform: rotate(45deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: all var(--transition-slow);
+            padding: 0 24px;
+        }
+
+        /* Feature List */
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            padding: 14px 0 14px 44px;
+            position: relative;
+            border-bottom: 1px solid var(--gray-100);
+            transition: all var(--transition-fast);
+        }
+
+        .feature-list li:hover {
+            padding-left: 50px;
+            background: var(--gray-50);
+            margin: 0 -20px;
+            padding-right: 20px;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "\2713";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--success-green), #059669);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 24px 28px;
+            border-radius: 12px;
+            margin: 24px 0;
+            border-left: 5px solid;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .info-box:hover {
+            transform: translateX(5px);
+        }
+
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            opacity: 0.05;
+            font-size: 80px;
+        }
+
+        .info-box.info {
+            background: linear-gradient(135deg, var(--info-bg) 0%, rgba(219, 234, 254, 0.5) 100%);
+            border-color: var(--info-border);
+        }
+
+        .info-box.warning {
+            background: linear-gradient(135deg, var(--warning-bg) 0%, rgba(254, 243, 199, 0.5) 100%);
+            border-color: var(--warning-border);
+        }
+
+        .info-box.tip {
+            background: linear-gradient(135deg, var(--tip-bg) 0%, rgba(209, 250, 229, 0.5) 100%);
+            border-color: var(--tip-border);
+        }
+
+        .info-box .box-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box.info .box-title { color: var(--primary-blue); }
+        .info-box.warning .box-title { color: #b45309; }
+        .info-box.tip .box-title { color: #047857; }
+
+        .info-box.info .box-title::before { content: "\2139\FE0F "; }
+        .info-box.warning .box-title::before { content: "\26A0\FE0F "; }
+        .info-box.tip .box-title::before { content: "\1F4A1 "; }
+
+        /* Step Tables */
+        .step-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .step-table tr {
+            transition: all var(--transition-fast);
+        }
+
+        .step-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .step-table .step-number {
+            width: 60px;
+            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            padding: 18px;
+            vertical-align: middle;
+        }
+
+        .step-table tr:nth-child(even) .step-number {
+            background: linear-gradient(180deg, var(--accent-cyan), #0891b2);
+        }
+
+        .step-table .step-content {
+            padding: 18px 24px;
+            background-color: var(--white);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .step-table tr:last-child .step-content {
+            border-bottom: none;
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            font-size: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 16px 20px;
+        }
+
+        .data-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-100);
+            background: var(--white);
+            transition: all var(--transition-fast);
+        }
+
+        .data-table tr:hover td {
+            background: var(--gray-50);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table .setting-name {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .data-table .default-value {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--accent-cyan);
+            background: var(--gray-100);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* Code/Technical Styling */
+        code, .code {
+            font-family: var(--font-mono);
+            background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--primary-blue-dark);
+            border: 1px solid var(--gray-200);
+        }
+
+        /* Definition Lists */
+        .def-list {
+            margin: 24px 0;
+        }
+
+        .def-list dt {
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .def-list dt::before {
+            content: '\25B8';
+            color: var(--accent-cyan);
+        }
+
+        .def-list dd {
+            margin-left: 24px;
+            padding-left: 16px;
+            border-left: 3px solid var(--gray-200);
+            margin-top: 8px;
+            color: var(--gray-600);
+        }
+
+        /* Troubleshooting */
+        .troubleshoot-item {
+            margin-bottom: 28px;
+            padding: 24px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+        }
+
+        .troubleshoot-item:hover {
+            border-color: var(--primary-blue-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .troubleshoot-item .problem {
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--gray-800);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .troubleshoot-item .problem::before {
+            content: "?";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            color: white;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .troubleshoot-item .solution {
+            margin-left: 44px;
+            padding-left: 16px;
+            border-left: 3px solid var(--tip-border);
+        }
+
+        .troubleshoot-item .solution ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .troubleshoot-item .solution li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 24px;
+            color: var(--gray-700);
+        }
+
+        .troubleshoot-item .solution li::before {
+            content: "\2192";
+            position: absolute;
+            left: 0;
+            color: var(--success-green);
+            font-weight: bold;
+        }
+
+        /* Keyboard Shortcuts */
+        .shortcut-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin: 24px 0;
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 16px;
+            background: var(--gray-50);
+            border-radius: 10px;
+            transition: all var(--transition-fast);
+        }
+
+        .shortcut-item:hover {
+            background: var(--gray-100);
+            transform: translateX(5px);
+        }
+
+        .shortcut-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, var(--white) 0%, var(--gray-100) 100%);
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 110px;
+            box-shadow: 0 3px 0 var(--gray-300), var(--shadow-sm);
+            color: var(--gray-700);
+        }
+
+        .shortcut-action {
+            color: var(--gray-600);
+        }
+
+        /* Quick Reference Table */
+        .ref-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .ref-table th {
+            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 16px 20px;
+        }
+
+        .ref-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-100);
+            background: var(--white);
+        }
+
+        .ref-table tr:hover td {
+            background: var(--gray-50);
+        }
+
+        .ref-table td:last-child {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            z-index: 1500;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, var(--white), var(--gray-50));
+            border-radius: 20px;
+            margin-top: 40px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .footer .thanks {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .footer .version-info {
+            color: var(--gray-500);
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .footer-link {
+            color: var(--gray-500);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-link:hover {
+            color: var(--primary-blue);
+        }
+
+        .footer .attribution {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--gray-400);
+        }
+
+        /* Print Styles */
+        @media print {
+            .nav-sidebar,
+            .dark-mode-toggle,
+            .back-to-top {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                max-width: 100%;
+            }
+
+            .section {
+                box-shadow: none;
+                border: 1px solid var(--gray-300);
+                page-break-inside: avoid;
+            }
+
+            .hero {
+                background: var(--primary-blue) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+
+            .step-table, .data-table, .ref-table {
+                page-break-inside: avoid;
+            }
+
+            .accordion-content {
+                max-height: none !important;
+                padding: 0 24px 24px !important;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .nav-sidebar {
+                width: 260px;
+            }
+
+            .main-content {
+                margin-left: 260px;
+                padding: 30px 40px 80px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .progress-tracker {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            .progress-step:not(:last-child)::after {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .nav-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 20px 0;
+            }
+
+            .nav-logo h1 {
+                font-size: 26px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+
+            .hero {
+                padding: 50px 30px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 20px;
+            }
+
+            .section {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            .dark-mode-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .section {
+                padding: 24px 20px;
+            }
+
+            .step-table .step-number {
+                width: 45px;
+                font-size: 16px;
+                padding: 14px 10px;
+            }
+
+            .step-table .step-content {
+                padding: 14px 16px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+
+            .back-to-top {
+                width: 48px;
+                height: 48px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <label class="dark-mode-toggle" title="Toggle dark mode">
+        <span class="toggle-icon sun">&#9728;</span>
+        <input type="checkbox" id="darkModeToggle">
+        <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+        </span>
+        <span class="toggle-icon moon">&#9790;</span>
+    </label>
+
+    <!-- Navigation Sidebar -->
+    <nav class="nav-sidebar">
+        <div class="nav-logo">
+            <h1>StimuPop</h1>
+            <span class="version-badge">v6.1.0</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#introduction" class="nav-link"><span class="section-number">1</span> Introduction</a></li>
+            <li><a href="#getting-started" class="nav-link"><span class="section-number">2</span> Getting Started</a></li>
+            <li><a href="#preparing-excel" class="nav-link"><span class="section-number">3</span> Preparing Excel</a></li>
+            <li><a href="#using-stimupop" class="nav-link"><span class="section-number">4</span> Using StimuPop</a></li>
+            <li><a href="#configuration" class="nav-link"><span class="section-number">5</span> Configuration</a></li>
+            <li><a href="#troubleshooting" class="nav-link"><span class="section-number">6</span> Troubleshooting</a></li>
+            <li><a href="#quick-reference" class="nav-link"><span class="section-number">7</span> Quick Reference</a></li>
+        </ul>
+    </nav>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" title="Back to top">&#8593;</button>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <div class="hero animate-fade-in">
+            <div class="hero-content">
+                <h1>StimuPop</h1>
+                <div class="subtitle">Excel to PowerPoint Converter</div>
+                <div class="tagline">Transform spreadsheet data into stunning presentations in seconds</div>
+                <span class="badge">Version 6.1.0</span>
+            </div>
+        </div>
+
+        <!-- Section 1: Introduction -->
+        <section id="introduction" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128161;</span> 1. Introduction</h1>
+
+            <h2>What is StimuPop?</h2>
+            <p><strong>StimuPop</strong> is a powerful yet easy-to-use application that converts Excel spreadsheet data into professional PowerPoint presentations. It is designed to save you hours of manual work by automatically handling images, text, and formatting.</p>
+
+            <!-- Feature Cards -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <span class="card-icon">&#128247;</span>
+                    <h3>Image Extraction</h3>
+                    <p>Automatically extracts embedded images from Excel cells with full fidelity.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="card-icon">&#128196;</span>
+                    <h3>Slide Generation</h3>
+                    <p>Creates individual slides for each data row with consistent formatting.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="card-icon">&#127912;</span>
+                    <h3>Smart Sizing</h3>
+                    <p>Multiple sizing modes ensure uniform image appearance across all slides.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="card-icon">&#9998;</span>
+                    <h3>Custom Formatting</h3>
+                    <p>Control fonts, sizes, colors, and positioning for professional results.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="card-icon">&#128260;</span>
+                    <h3>Dual Orientation</h3>
+                    <p>Supports both portrait and landscape slide orientations.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="card-icon">&#9989;</span>
+                    <h3>Error Handling</h3>
+                    <p>Gracefully handles missing images without stopping the process.</p>
+                </div>
+            </div>
+
+            <div class="info-box tip">
+                <div class="box-title">Pro Tip</div>
+                StimuPop is perfect for creating product catalogs, photo albums, training materials, and any presentation where each slide follows the same format.
+            </div>
+        </section>
+
+        <!-- Section 2: Getting Started -->
+        <section id="getting-started" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128640;</span> 2. Getting Started</h1>
+
+            <h2>Installation (Portable Version)</h2>
+            <p>The portable version requires no installation. Simply follow these steps:</p>
+
+            <table class="step-table">
+                <tr>
+                    <td class="step-number">1</td>
+                    <td class="step-content">Extract the ZIP file to any folder on your computer</td>
+                </tr>
+                <tr>
+                    <td class="step-number">2</td>
+                    <td class="step-content">Open the extracted folder</td>
+                </tr>
+                <tr>
+                    <td class="step-number">3</td>
+                    <td class="step-content">Double-click <code>StimuPop.exe</code> (or <code>StimuPop.bat</code>) to launch the application</td>
+                </tr>
+                <tr>
+                    <td class="step-number">4</td>
+                    <td class="step-content">Wait for the terminal window to display <code>Server ready!</code> message</td>
+                </tr>
+                <tr>
+                    <td class="step-number">5</td>
+                    <td class="step-content">Hold <code>Ctrl</code> and click the localhost link, OR copy the URL and paste it into your browser</td>
+                </tr>
+            </table>
+
+            <div class="info-box info">
+                <div class="box-title">First Launch</div>
+                The first time you run StimuPop, the server may take 30-60 seconds to start. Wait for the <code>Server ready!</code> message before clicking the link. Subsequent launches will be faster.
+            </div>
+
+            <h2>System Requirements</h2>
+
+            <table class="data-table">
+                <tr>
+                    <td class="setting-name">&#128187; Operating System</td>
+                    <td>Windows 10 or later (64-bit)</td>
+                </tr>
+                <tr>
+                    <td class="setting-name">&#128190; Disk Space</td>
+                    <td>~300 MB for portable version</td>
+                </tr>
+                <tr>
+                    <td class="setting-name">&#129518; Memory</td>
+                    <td>4 GB RAM minimum</td>
+                </tr>
+                <tr>
+                    <td class="setting-name">&#127760; Browser</td>
+                    <td>Chrome, Firefox, or Edge (latest version)</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Section 3: Preparing Your Excel File -->
+        <section id="preparing-excel" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128202;</span> 3. Preparing Your Excel File</h1>
+            <p>For best results, structure your Excel file as follows:</p>
+
+            <h2>Recommended Structure</h2>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Column A<br>(Skip)</th>
+                        <th>Column B<br>(Image)</th>
+                        <th>Column C<br>(Title)</th>
+                        <th>Column D<br>(Description)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ID-001</td>
+                        <td><em>[Image 1]</em></td>
+                        <td>Product One</td>
+                        <td>Description of product one</td>
+                    </tr>
+                    <tr>
+                        <td>ID-002</td>
+                        <td><em>[Image 2]</em></td>
+                        <td>Product Two</td>
+                        <td>Description of product two</td>
+                    </tr>
+                    <tr>
+                        <td>ID-003</td>
+                        <td><em>[Image 3]</em></td>
+                        <td>Product Three</td>
+                        <td>Description of product three</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Image Options</h2>
+
+            <div class="accordion">
+                <div class="accordion-item">
+                    <input type="checkbox" id="acc1" checked>
+                    <label class="accordion-header" for="acc1">
+                        <span>&#128247; Embedded Images (Recommended)</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>Paste images directly into Excel cells. This is the most reliable method and ensures images travel with the file.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <input type="checkbox" id="acc2">
+                    <label class="accordion-header" for="acc2">
+                        <span>&#128193; File Paths</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>Enter the full path to an image file (e.g., <code>C:\Images\photo.jpg</code>). Ensure paths are accessible from the computer running StimuPop.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <input type="checkbox" id="acc3">
+                    <label class="accordion-header" for="acc3">
+                        <span>&#127760; URLs</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>Enter a web URL to an image (e.g., <code>https://example.com/image.png</code>). Requires internet connection during generation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box warning">
+                <div class="box-title">Important</div>
+                Images embedded directly in Excel cells provide the most consistent results. File paths must be accessible from the computer running StimuPop.
+            </div>
+        </section>
+
+        <!-- Section 4: Using StimuPop -->
+        <section id="using-stimupop" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#9881;</span> 4. Using StimuPop</h1>
+
+            <h2>10-Step Workflow</h2>
+
+            <!-- Progress Tracker -->
+            <div class="progress-tracker">
+                <div class="progress-step">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">Launch App</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">Open Browser</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Upload Excel</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Add Template</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">5</div>
+                    <span class="step-label">Set Image Col</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">6</div>
+                    <span class="step-label">Set Text Cols</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">7</div>
+                    <span class="step-label">Adjust Font</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">8</div>
+                    <span class="step-label">Generate</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">9</div>
+                    <span class="step-label">Wait</span>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">10</div>
+                    <span class="step-label">Download</span>
+                </div>
+            </div>
+
+            <table class="step-table">
+                <tr>
+                    <td class="step-number">1</td>
+                    <td class="step-content">Launch StimuPop by double-clicking <code>StimuPop.exe</code> and wait for <code>Server ready!</code></td>
+                </tr>
+                <tr>
+                    <td class="step-number">2</td>
+                    <td class="step-content">Ctrl+click the localhost link (or copy/paste into browser)</td>
+                </tr>
+                <tr>
+                    <td class="step-number">3</td>
+                    <td class="step-content">Click <strong>Browse files</strong> under <strong>Upload Excel File</strong> and select your <code>.xlsx</code> file</td>
+                </tr>
+                <tr>
+                    <td class="step-number">4</td>
+                    <td class="step-content">Optionally upload a PowerPoint template for custom styling</td>
+                </tr>
+                <tr>
+                    <td class="step-number">5</td>
+                    <td class="step-content">Set the <strong>Image Column</strong> (e.g., <code>B</code> or the column header name)</td>
+                </tr>
+                <tr>
+                    <td class="step-number">6</td>
+                    <td class="step-content">Set the <strong>Text Columns</strong> (e.g., <code>C,D,E,F</code> for multiple columns)</td>
+                </tr>
+                <tr>
+                    <td class="step-number">7</td>
+                    <td class="step-content">Adjust font size using the slider (default: 14pt)</td>
+                </tr>
+                <tr>
+                    <td class="step-number">8</td>
+                    <td class="step-content">Click the blue <strong>Generate Presentation</strong> button</td>
+                </tr>
+                <tr>
+                    <td class="step-number">9</td>
+                    <td class="step-content">Wait for processing (progress bar shows status)</td>
+                </tr>
+                <tr>
+                    <td class="step-number">10</td>
+                    <td class="step-content">Click <strong>Download Presentation</strong> to save your <code>.pptx</code> file</td>
+                </tr>
+            </table>
+
+            <h2>Understanding the Interface</h2>
+
+            <dl class="def-list">
+                <dt>Upload Files</dt>
+                <dd>Where you select your Excel file and optional PowerPoint template</dd>
+
+                <dt>Configuration</dt>
+                <dd>Basic settings like image column, text columns, and font size</dd>
+
+                <dt>Advanced Settings</dt>
+                <dd>Layout options and per-column formatting (click to expand)</dd>
+
+                <dt>Data Preview</dt>
+                <dd>Shows a preview of your Excel data before generation</dd>
+
+                <dt>Generate Button</dt>
+                <dd>Starts the presentation generation process</dd>
+            </dl>
+        </section>
+
+        <!-- Section 5: Configuration Options -->
+        <section id="configuration" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128736;</span> 5. Configuration Options</h1>
+
+            <h2>Basic Settings</h2>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Description</th>
+                        <th>Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="setting-name">Image Column</td>
+                        <td>Letter (A-Z) or name of the column containing images</td>
+                        <td><span class="default-value">B</span></td>
+                    </tr>
+                    <tr>
+                        <td class="setting-name">Text Columns</td>
+                        <td>Comma-separated list of columns for text content</td>
+                        <td><span class="default-value">C,D,E,F</span></td>
+                    </tr>
+                    <tr>
+                        <td class="setting-name">Font Size</td>
+                        <td>Default font size for all text (10-32pt)</td>
+                        <td><span class="default-value">14</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Advanced Settings</h2>
+            <p>Click <strong>Advanced Settings</strong> to access layout, image sizing, and alignment options:</p>
+
+            <div class="accordion">
+                <div class="accordion-item">
+                    <input type="checkbox" id="adv1" checked>
+                    <label class="accordion-header" for="adv1">
+                        <span>&#128444; Image Alignment (New in v6.0)</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>Control how images are positioned within their bounding box:</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Alignment Type</th>
+                                    <th>Options</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="setting-name">Vertical Alignment</td>
+                                    <td>Top, Center (default), Bottom</td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Horizontal Alignment</td>
+                                    <td>Left, Center (default), Right</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="info-box tip">
+                            <div class="box-title">Tip</div>
+                            Use <strong>Bottom</strong> vertical alignment for variety cards where you want images anchored to the bottom of the image area.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <input type="checkbox" id="adv2">
+                    <label class="accordion-header" for="adv2">
+                        <span>&#128208; Image Sizing</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>Control how images are sized uniformly across all slides:</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Size Mode</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="setting-name">Fit to Box (Recommended)</td>
+                                    <td>Images scale to fit within Max Width and Max Height while maintaining aspect ratio.</td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Fit Width Only</td>
+                                    <td>Images have fixed width, height adjusts automatically based on aspect ratio.</td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Fit Height Only</td>
+                                    <td>Images have fixed height, width adjusts automatically based on aspect ratio.</td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Stretch to Exact Size</td>
+                                    <td>Images are forced to exact dimensions. May distort images.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <input type="checkbox" id="adv3">
+                    <label class="accordion-header" for="adv3">
+                        <span>&#128207; Layout Position Settings</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>These settings are only available when using Blank slide mode (not Template mode):</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Setting</th>
+                                    <th>Description</th>
+                                    <th>Default</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="setting-name">Max Width</td>
+                                    <td>Maximum image width (2.0-9.0 inches)</td>
+                                    <td><span class="default-value">5.5 inches</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Max Height</td>
+                                    <td>Maximum image height (2.0-7.0 inches)</td>
+                                    <td><span class="default-value">4.0 inches</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Image Top Position</td>
+                                    <td>Distance from top of slide to image</td>
+                                    <td><span class="default-value">0.5 inches</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Text Top Position</td>
+                                    <td>Distance from top of slide to text area</td>
+                                    <td><span class="default-value">5.0 inches</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="setting-name">Slide Orientation</td>
+                                    <td>Portrait (tall) or Landscape (wide)</td>
+                                    <td><span class="default-value">Portrait</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <input type="checkbox" id="adv4">
+                    <label class="accordion-header" for="adv4">
+                        <span>&#127919; Advanced Positioning (New in v6.0)</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>For precise control over text column placement, enable <strong>Advanced Positioning</strong>:</p>
+                        <dl class="def-list">
+                            <dt>Auto (default)</dt>
+                            <dd>Text flows sequentially after the previous column.</dd>
+                            <dt>Fixed</dt>
+                            <dd>Text is placed at an exact position on the slide, regardless of other content.</dd>
+                        </dl>
+                        <p>Default fixed positions (useful for variety cards):</p>
+                        <ul class="feature-list">
+                            <li><strong>Column E:</strong> 5.0 inches from top</li>
+                            <li><strong>Column F:</strong> 6.5 inches from top</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <input type="checkbox" id="adv5">
+                    <label class="accordion-header" for="adv5">
+                        <span>&#127912; Per-Column Formatting</span>
+                        <span class="accordion-icon">+</span>
+                    </label>
+                    <div class="accordion-content">
+                        <p>When using Blank mode, you can customize each text column individually:</p>
+                        <ul class="feature-list">
+                            <li>Font size (8-48pt)</li>
+                            <li>Font family (Calibri, Arial, Times New Roman, etc.)</li>
+                            <li>Text color (color picker)</li>
+                            <li>Bold and Italic styles</li>
+                        </ul>
+                        <div class="info-box tip">
+                            <div class="box-title">Tip</div>
+                            Use larger, bold fonts for titles (Column C) and smaller regular fonts for descriptions (Column D) to create visual hierarchy.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Troubleshooting -->
+        <section id="troubleshooting" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128295;</span> 6. Troubleshooting</h1>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Application won't start</div>
+                <div class="solution">
+                    <ul>
+                        <li>Ensure you extracted all files from the ZIP</li>
+                        <li>Run as Administrator (right-click and select Run as administrator)</li>
+                        <li>Check that antivirus is not blocking the application</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Browser does not open automatically</div>
+                <div class="solution">
+                    <ul>
+                        <li>Wait for <code>Server ready!</code> message in the terminal window</li>
+                        <li>Hold Ctrl and click the localhost link, or copy/paste the URL</li>
+                        <li>Manually open your browser and go to: <code>http://localhost:8501</code></li>
+                        <li>Try a different browser (Chrome recommended)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">'Column not found' error</div>
+                <div class="solution">
+                    <ul>
+                        <li>Check that your column letter/name matches exactly</li>
+                        <li>Column letters are case-insensitive (B = b)</li>
+                        <li>Column names ARE case-sensitive</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Images not appearing on slides</div>
+                <div class="solution">
+                    <ul>
+                        <li>Ensure images are embedded in cells, not floating</li>
+                        <li>Check file paths are correct and accessible</li>
+                        <li>Verify image files are JPG, PNG, or GIF format</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Presentation generation is slow</div>
+                <div class="solution">
+                    <ul>
+                        <li>Large images take longer to process</li>
+                        <li>Consider resizing images in Excel before upload</li>
+                        <li>Reduce the number of slides if testing</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Text formatting not applied</div>
+                <div class="solution">
+                    <ul>
+                        <li>Ensure you configured formatting in Advanced Settings</li>
+                        <li>Check that column letters in formatting match your data</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="troubleshoot-item">
+                <div class="problem">Images are different sizes on slides</div>
+                <div class="solution">
+                    <ul>
+                        <li>Open Advanced Settings and set Size Mode to <strong>Fit to Box</strong></li>
+                        <li>Adjust Max Width and Max Height to your desired dimensions</li>
+                        <li>All images will now scale uniformly</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Quick Reference -->
+        <section id="quick-reference" class="section animate-fade-in-up">
+            <h1><span class="section-icon">&#128218;</span> 7. Quick Reference</h1>
+
+            <h2>Column Reference Cheat Sheet</h2>
+
+            <table class="ref-table">
+                <thead>
+                    <tr>
+                        <th>Reference Type</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Single letter</td>
+                        <td>B</td>
+                    </tr>
+                    <tr>
+                        <td>Multiple letters</td>
+                        <td>C,D,E,F</td>
+                    </tr>
+                    <tr>
+                        <td>Column name</td>
+                        <td>Title</td>
+                    </tr>
+                    <tr>
+                        <td>Mixed</td>
+                        <td>B,Title,Description</td>
+                    </tr>
+                    <tr>
+                        <td>With spaces</td>
+                        <td>"Product Name"</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Keyboard Shortcuts</h2>
+
+            <div class="shortcut-list">
+                <div class="shortcut-item">
+                    <span class="shortcut-key">Ctrl + C</span>
+                    <span class="shortcut-action">Stop the application (in command window)</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">F5</span>
+                    <span class="shortcut-action">Refresh the browser page</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="shortcut-key">Ctrl + S</span>
+                    <span class="shortcut-action">Save downloaded file (in browser)</span>
+                </div>
+            </div>
+
+            <div class="info-box info">
+                <div class="box-title">Need Help?</div>
+                If you encounter issues not covered in this guide, please contact your system administrator or the development team with:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>A description of the problem</li>
+                    <li>The exact error message (if any)</li>
+                    <li>Your Excel file (if possible)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="thanks">Thank you for using StimuPop!</div>
+            <div class="version-info">Version 6.1.0 | Last Updated: January 2026</div>
+            <div class="footer-links">
+                <a href="#introduction" class="footer-link">Introduction</a>
+                <a href="#getting-started" class="footer-link">Getting Started</a>
+                <a href="#troubleshooting" class="footer-link">Troubleshooting</a>
+                <a href="#quick-reference" class="footer-link">Quick Reference</a>
+            </div>
+            <div class="attribution">
+                Crafted with care for seamless Excel-to-PowerPoint workflows
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Check for saved preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+        });
+
+        // Back to Top Button
+        const backToTop = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Active Navigation Highlighting
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        function highlightNav() {
+            const scrollY = window.scrollY;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + sectionId) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', highlightNav);
+        highlightNav(); // Initial call
+
+        // Intersection Observer for Scroll Animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = '0.1s';
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-fade-in-up, .animate-fade-in, .animate-slide-in-left').forEach(el => {
+            el.style.animationPlayState = 'paused';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

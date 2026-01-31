@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 6.0.0
+**Current Version:** 6.1.0
 
 ## Architecture Decisions
 
