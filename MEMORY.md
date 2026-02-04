@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 7.1.0
+**Current Version:** 8.0.0
 
 ## Architecture Decisions
 
@@ -331,6 +331,32 @@ for idx, col in enumerate(user_columns):
 
 **Code Location**: `app.py` (Excel upload handler)
 
+### 20. Multi-Element Template Support (v8.0.0)
+**Decision**: Support multiple images and text boxes per slide in Template Mode.
+
+**Rationale**:
+- Users need slides with multiple product images side-by-side
+- Templates often have multiple text boxes for different data sections
+- Single-image/single-text assumption limited template design flexibility
+
+**Implementation**:
+- `ImageElement` dataclass: column, placeholder_name, sizing_mode, alignment
+- `TextGroup` dataclass: columns list, placeholder_name
+- `SlideConfig.image_elements` / `SlideConfig.text_groups`: Optional lists
+- `get_image_elements()` / `get_text_groups()`: Backward-compat helpers that build single-item lists from legacy fields when multi-element is not configured
+- `_extract_template_info()`: Builds `image_shapes` and `text_shapes` dicts keyed by shape name
+- `_populate_slide_multi()`: Loops over each element, matching by placeholder name
+- `_populate_slide_legacy()`: Preserves exact pre-v8.0 behavior
+- `validate_columns_multi()` / `get_slide_data_multi()`: New Excel handler methods
+- UI: Session state counter pattern for dynamic add/remove of elements
+
+**Scope**: Template Mode only (v8.0). Blank Mode multi-element deferred to v8.1.
+
+**Code Locations**:
+- `src/pptx_generator.py`: ImageElement, TextGroup, SlideConfig extensions, _populate_slide_multi
+- `src/excel_handler.py`: validate_columns_multi, get_slide_data_multi
+- `app.py`: Multi-element UI section, generate_presentation branching
+
 ## Coding Conventions
 
 ### Type Hints
@@ -402,6 +428,8 @@ def example(param: str) -> bool:
 - `PPTXGenerator` - PowerPoint generation
 - `SlideConfig` - Slide layout configuration (includes `img_height`, `img_size_mode`)
 - `ColumnFormat` - Per-column text formatting
+- `ImageElement` - Multi-element image config (v8.0)
+- `TextGroup` - Multi-element text group config (v8.0)
 
 ### Image Sizing Constants
 - `IMG_SIZE_FIT_BOX` - Fit within box, preserve aspect ratio
@@ -416,15 +444,20 @@ def example(param: str) -> bool:
 ### Data Flow
 ```
 Excel File → ExcelProcessor → slide_data → PPTXGenerator
-                                              ↓
-                              ImageLoader → images
-                              (including Rich Data extraction)
-                                              ↓
-                              Template Mode?
-                              ├── BLANK: _create_slide()
-                              └── PLACEHOLDER: _create_slide_from_template()
-                                              ↓
-                                         Presentation
+                │                              ↓
+                │                ImageLoader → images
+                │                (including Rich Data extraction)
+                │                              ↓
+                │                Template Mode?
+                │                ├── BLANK: _create_slide()
+                │                └── PLACEHOLDER: _create_slide_from_template()
+                │                    ├── Multi: _populate_slide_multi()
+                │                    └── Legacy: _populate_slide_legacy()
+                │                              ↓
+                │                         Presentation
+                │
+                ├── Single-element: get_slide_data()
+                └── Multi-element: get_slide_data_multi()
 ```
 
 ### Rich Data Image Flow (v5.1.0)

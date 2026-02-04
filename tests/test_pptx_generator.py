@@ -8,12 +8,18 @@ from unittest.mock import MagicMock, patch
 
 from PIL import Image
 
+from pptx.util import Emu
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+
 from src.pptx_generator import (
     PPTXGenerator,
     SlideConfig,
     SlideResult,
     GenerationResult,
     ColumnFormat,
+    ImageElement,
+    TextGroup,
+    TEMPLATE_MODE_PLACEHOLDER,
     create_presentation,
 )
 from src.image_handler import ImageResult
@@ -489,3 +495,287 @@ class TestPerColumnFormatting:
 
         assert result.success is True
         assert result.slides_generated == 2
+
+
+# ---------------------------------------------------------------------------
+# Helpers for multi-element template tests
+# ---------------------------------------------------------------------------
+
+def _make_shape_data(name, shape_type=MSO_SHAPE_TYPE.TEXT_BOX, paragraphs=None):
+    """Build a minimal template shape_data dict for testing."""
+    return {
+        'name': name,
+        'type': shape_type,
+        'left': Emu(0),
+        'top': Emu(0),
+        'width': Emu(914400),   # 1 inch
+        'height': Emu(914400),  # 1 inch
+        'paragraphs': paragraphs or [],
+    }
+
+
+def _make_template_info(shapes, image_shapes=None, text_shapes=None,
+                        image_shape=None, text_shape=None):
+    """Build a template_info dict matching _extract_template_info output."""
+    return {
+        'shapes': shapes,
+        'image_shape': image_shape,
+        'text_shape': text_shape,
+        'image_shapes': image_shapes or {},
+        'text_shapes': text_shapes or {},
+    }
+
+
+class TestMultiElementTemplateSlide:
+    """Tests for v8.0 multi-element _create_slide_from_template."""
+
+    def _generator_with_elements(self, image_elements=None, text_groups=None):
+        """Create a PPTXGenerator configured for placeholder mode with elements."""
+        config = SlideConfig(
+            img_column="B",
+            text_columns=["C"],
+            template_mode=TEMPLATE_MODE_PLACEHOLDER,
+            image_elements=image_elements,
+            text_groups=text_groups,
+        )
+        return PPTXGenerator(config)
+
+    # --- Multi-image tests ---
+
+    @patch.object(PPTXGenerator, '_add_image_at_position')
+    @patch.object(PPTXGenerator, '_recreate_shape')
+    def test_multi_image_places_two_images(self, mock_recreate, mock_add_img):
+        """Two image_sources entries should each invoke _add_image_at_position."""
+        gen = self._generator_with_elements(
+            image_elements=[
+                ImageElement(column="B", placeholder_name="Picture 1"),
+                ImageElement(column="G", placeholder_name="Picture 2"),
+            ]
+        )
+
+        img1 = create_test_image_result()
+        img2 = create_test_image_result()
+        embedded = {"B2": img1, "G2": img2}
+
+        pic1_shape = _make_shape_data("Picture 1", MSO_SHAPE_TYPE.AUTO_SHAPE)
+        pic2_shape = _make_shape_data("Picture 2", MSO_SHAPE_TYPE.AUTO_SHAPE)
+        bg_shape = _make_shape_data("Background")
+
+        template_info = _make_template_info(
+            shapes=[pic1_shape, pic2_shape, bg_shape],
+            image_shapes={"Picture 1": pic1_shape, "Picture 2": pic2_shape},
+        )
+
+        data = {
+            "row_index": 0,
+            "image_sources": [
+                {"image_source": None, "image_cell": "B2", "placeholder_name": "Picture 1"},
+                {"image_source": None, "image_cell": "G2", "placeholder_name": "Picture 2"},
+            ],
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        result = gen._create_slide_from_template(prs, data, embedded, template_info)
+
+        assert result.has_image is True
+        assert mock_add_img.call_count == 2
+        # Background shape should be recreated
+        assert mock_recreate.call_count == 1
+
+    # --- Multi-text tests ---
+
+    @patch.object(PPTXGenerator, '_add_text_from_template')
+    @patch.object(PPTXGenerator, '_recreate_shape')
+    def test_multi_text_places_two_textboxes(self, mock_recreate, mock_add_txt):
+        """Two text_contents entries should each invoke _add_text_from_template."""
+        gen = self._generator_with_elements(
+            text_groups=[
+                TextGroup(columns=["C", "D"], placeholder_name="TextBox 1"),
+                TextGroup(columns=["E"], placeholder_name="TextBox 2"),
+            ]
+        )
+
+        tb1_shape = _make_shape_data("TextBox 1")
+        tb2_shape = _make_shape_data("TextBox 2")
+        bg_shape = _make_shape_data("Background")
+
+        template_info = _make_template_info(
+            shapes=[tb1_shape, tb2_shape, bg_shape],
+            text_shapes={"TextBox 1": tb1_shape, "TextBox 2": tb2_shape},
+        )
+
+        data = {
+            "row_index": 0,
+            "text_contents": [
+                {
+                    "placeholder_name": "TextBox 1",
+                    "text_content": [
+                        {"column": "C", "text": "Title"},
+                        {"column": "D", "text": "Subtitle"},
+                    ],
+                },
+                {
+                    "placeholder_name": "TextBox 2",
+                    "text_content": [{"column": "E", "text": "Footer"}],
+                },
+            ],
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        result = gen._create_slide_from_template(prs, data, {}, template_info)
+
+        assert result.text_added is True
+        assert mock_add_txt.call_count == 2
+        assert mock_recreate.call_count == 1
+
+    # --- Mixed multi-image + multi-text ---
+
+    @patch.object(PPTXGenerator, '_add_image_at_position')
+    @patch.object(PPTXGenerator, '_add_text_from_template')
+    @patch.object(PPTXGenerator, '_recreate_shape')
+    def test_multi_image_and_text_combined(self, mock_recreate, mock_txt, mock_img):
+        """Both image_sources and text_contents in one slide."""
+        gen = self._generator_with_elements(
+            image_elements=[ImageElement(column="B", placeholder_name="Pic")],
+            text_groups=[TextGroup(columns=["C"], placeholder_name="TB")],
+        )
+
+        img = create_test_image_result()
+        embedded = {"B2": img}
+
+        pic_shape = _make_shape_data("Pic", MSO_SHAPE_TYPE.AUTO_SHAPE)
+        tb_shape = _make_shape_data("TB")
+        dec_shape = _make_shape_data("Decoration")
+
+        template_info = _make_template_info(
+            shapes=[pic_shape, tb_shape, dec_shape],
+            image_shapes={"Pic": pic_shape},
+            text_shapes={"TB": tb_shape},
+        )
+
+        data = {
+            "row_index": 0,
+            "image_sources": [
+                {"image_source": None, "image_cell": "B2", "placeholder_name": "Pic"},
+            ],
+            "text_contents": [
+                {"placeholder_name": "TB", "text_content": [{"column": "C", "text": "Hello"}]},
+            ],
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        result = gen._create_slide_from_template(prs, data, embedded, template_info)
+
+        assert result.has_image is True
+        assert result.text_added is True
+        assert mock_img.call_count == 1
+        assert mock_txt.call_count == 1
+        assert mock_recreate.call_count == 1
+
+    # --- Placeholder shown when no image data for a shape ---
+
+    @patch.object(PPTXGenerator, '_add_placeholder_shape')
+    @patch.object(PPTXGenerator, '_recreate_shape')
+    def test_multi_image_no_data_shows_placeholder(self, mock_recreate, mock_placeholder):
+        """Image shape with no matching image_sources entry shows placeholder."""
+        gen = self._generator_with_elements(
+            image_elements=[ImageElement(column="B", placeholder_name="Pic")],
+        )
+
+        pic_shape = _make_shape_data("Pic", MSO_SHAPE_TYPE.AUTO_SHAPE)
+        template_info = _make_template_info(
+            shapes=[pic_shape],
+            image_shapes={"Pic": pic_shape},
+        )
+
+        # image_sources is present (multi mode) but has no entry for "Pic"
+        data = {
+            "row_index": 0,
+            "image_sources": [],
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        result = gen._create_slide_from_template(prs, data, {}, template_info)
+
+        assert mock_placeholder.call_count == 1
+        assert result.has_image is False
+
+    # --- Legacy backward compatibility ---
+
+    @patch.object(PPTXGenerator, '_add_image_at_position')
+    @patch.object(PPTXGenerator, '_add_text_from_template')
+    @patch.object(PPTXGenerator, '_recreate_shape')
+    def test_legacy_mode_still_works(self, mock_recreate, mock_txt, mock_img):
+        """Without image_sources/text_contents, legacy path is used."""
+        config = SlideConfig(
+            img_column="B",
+            text_columns=["C"],
+            template_mode=TEMPLATE_MODE_PLACEHOLDER,
+            image_placeholder_name="Rectangle 1",
+            text_placeholder_name="TextBox",
+        )
+        gen = PPTXGenerator(config)
+
+        img = create_test_image_result()
+        embedded = {"B2": img}
+
+        img_shape = _make_shape_data("Rectangle 1", MSO_SHAPE_TYPE.AUTO_SHAPE)
+        txt_shape = _make_shape_data("TextBox 5")
+
+        template_info = _make_template_info(
+            shapes=[img_shape, txt_shape],
+            image_shape=img_shape,
+            text_shape=txt_shape,
+            image_shapes={"Rectangle 1": img_shape},
+            text_shapes={"TextBox 5": txt_shape},
+        )
+
+        data = {
+            "row_index": 0,
+            "image_source": None,
+            "image_cell": "B2",
+            "text_content": [{"column": "C", "text": "Legacy text"}],
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        result = gen._create_slide_from_template(prs, data, embedded, template_info)
+
+        assert result.has_image is True
+        assert result.text_added is True
+        # Legacy path: image via legacy branch, text via legacy branch
+        assert mock_img.call_count == 1
+        assert mock_txt.call_count == 1
+
+    # --- Edge: multi-text with empty text_content ---
+
+    @patch.object(PPTXGenerator, '_add_text_from_template')
+    def test_multi_text_missing_entry_uses_empty(self, mock_txt):
+        """Text shape with no matching text_contents entry passes empty list."""
+        gen = self._generator_with_elements(
+            text_groups=[TextGroup(columns=["C"], placeholder_name="TB")],
+        )
+
+        tb_shape = _make_shape_data("TB")
+        template_info = _make_template_info(
+            shapes=[tb_shape],
+            text_shapes={"TB": tb_shape},
+        )
+
+        data = {
+            "row_index": 0,
+            "text_contents": [],  # Multi mode active but no entry for TB
+        }
+
+        from pptx import Presentation as _Prs
+        prs = _Prs()
+        gen._create_slide_from_template(prs, data, {}, template_info)
+
+        # _add_text_from_template called with empty list
+        mock_txt.assert_called_once()
+        _, _, text_content_arg = mock_txt.call_args[0]
+        assert text_content_arg == []

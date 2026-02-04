@@ -1,7 +1,13 @@
 """
-StimuPop - Source Package v7.1
+StimuPop - Source Package v8.0
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
+
+New in v8.0:
+- Multi-element support: multiple images and text boxes per slide (Template Mode)
+- ImageElement and TextGroup dataclasses for multi-element configuration
+- Dynamic shape matching in templates by placeholder name
+- Backward compatible with all single-element workflows
 
 New in v7.1:
 - Fixed: Text overflow option now works in Template Mode
@@ -39,6 +45,8 @@ from .pptx_generator import (
     ColumnFormat,
     ImageAlignment,
     ColumnPosition,
+    ImageElement,
+    TextGroup,
     IMG_SIZE_FIT_BOX,
     IMG_SIZE_FIT_WIDTH,
     IMG_SIZE_FIT_HEIGHT,
@@ -77,6 +85,8 @@ __all__ = [
     "ColumnFormat",
     "ImageAlignment",
     "ColumnPosition",
+    "ImageElement",
+    "TextGroup",
     # Image sizing modes
     "IMG_SIZE_FIT_BOX",
     "IMG_SIZE_FIT_WIDTH",
@@ -93,4 +103,4 @@ __all__ = [
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "7.1.0"
+__version__ = "8.0.0"

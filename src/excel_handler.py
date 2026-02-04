@@ -10,7 +10,7 @@ Provides secure Excel processing with:
 """
 
 from io import BytesIO
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -291,6 +291,196 @@ class ExcelProcessor:
             slides.append(slide_data)
 
         logger.info(f"Extracted data for {len(slides)} slides")
+        return slides
+
+    def validate_columns_multi(
+        self,
+        df: pd.DataFrame,
+        image_elements: list,
+        text_groups: list
+    ) -> Tuple[List[Tuple[str, str]], List[Tuple[List[str], str]]]:
+        """
+        Validate columns for multi-element mode (NEW in v8.0).
+
+        Args:
+            df: DataFrame to validate
+            image_elements: List of ImageElement objects (each has .column and .placeholder_name)
+            text_groups: List of TextGroup objects (each has .columns and .placeholder_name)
+
+        Returns:
+            Tuple of (resolved_images, resolved_texts) where:
+            - resolved_images: List of (resolved_column_name, placeholder_name)
+            - resolved_texts: List of (resolved_column_names_list, placeholder_name)
+
+        Raises:
+            ExcelValidationError: If any required image column doesn't exist,
+                or if ALL columns for a text group are missing.
+        """
+        available_columns = list(df.columns)
+
+        # --- Resolve image element columns ---
+        resolved_images: List[Tuple[str, str]] = []
+        for elem in image_elements:
+            resolved = self._resolve_column(df, elem.column, available_columns)
+            if resolved is None:
+                raise ExcelValidationError(
+                    f"Image column '{elem.column}' for placeholder "
+                    f"'{elem.placeholder_name}' not found",
+                    column=elem.column,
+                    details=f"Available columns: {available_columns}"
+                )
+            resolved_images.append((resolved, elem.placeholder_name))
+
+        # --- Resolve text group columns ---
+        resolved_texts: List[Tuple[List[str], str]] = []
+        for group in text_groups:
+            resolved_cols: List[str] = []
+            for col in group.columns:
+                resolved = self._resolve_column(df, col, available_columns)
+                if resolved is None:
+                    logger.warning(
+                        f"Text column '{col}' for placeholder "
+                        f"'{group.placeholder_name}' not found, skipping"
+                    )
+                else:
+                    resolved_cols.append(resolved)
+
+            if not resolved_cols:
+                raise ExcelValidationError(
+                    f"No valid text columns found for placeholder "
+                    f"'{group.placeholder_name}'",
+                    details=(
+                        f"Requested: {group.columns}, "
+                        f"Available: {available_columns}"
+                    )
+                )
+            resolved_texts.append((resolved_cols, group.placeholder_name))
+
+        logger.info(
+            f"Multi-element validation passed: "
+            f"{len(resolved_images)} image(s), {len(resolved_texts)} text group(s)"
+        )
+        return resolved_images, resolved_texts
+
+    def get_slide_data_multi(
+        self,
+        df: pd.DataFrame,
+        image_elements: list,
+        text_groups: list,
+        sanitize: bool = True
+    ) -> List[dict]:
+        """
+        Extract slide data for multi-element mode (NEW in v8.0).
+
+        Args:
+            df: Source DataFrame
+            image_elements: List of ImageElement objects (each has .column and .placeholder_name)
+            text_groups: List of TextGroup objects (each has .columns and .placeholder_name)
+            sanitize: Whether to sanitize text content
+
+        Returns:
+            List of dicts with:
+            - 'row_index': int
+            - 'image_sources': list of {image_source, image_cell, placeholder_name}
+            - 'text_contents': list of {text_content: [...], placeholder_name}
+            - Legacy fields: 'image_source', 'image_cell', 'text_content' (from first element)
+        """
+        all_columns = list(df.columns)
+
+        # Pre-compute column letters for image elements
+        img_col_meta: List[Dict[str, str]] = []
+        for elem in image_elements:
+            col_name = elem.column
+            # Resolve to actual column name (may already be resolved by validate)
+            resolved = self._resolve_column(df, col_name, all_columns)
+            if resolved and resolved in all_columns:
+                idx = all_columns.index(resolved)
+                letter = self._get_column_letters(idx + 1)[-1]
+            else:
+                resolved = col_name
+                letter = "A"
+            img_col_meta.append({
+                "resolved": resolved,
+                "letter": letter,
+                "placeholder_name": elem.placeholder_name
+            })
+
+        # Pre-compute column letters for text groups
+        txt_col_meta: List[Dict] = []
+        for group in text_groups:
+            group_cols: List[Dict[str, str]] = []
+            for col in group.columns:
+                resolved = self._resolve_column(df, col, all_columns)
+                if resolved and resolved in all_columns:
+                    idx = all_columns.index(resolved)
+                    letter = self._get_column_letters(idx + 1)[-1]
+                    group_cols.append({"resolved": resolved, "letter": letter})
+            txt_col_meta.append({
+                "columns": group_cols,
+                "placeholder_name": group.placeholder_name
+            })
+
+        slides: List[dict] = []
+
+        for index, row in df.iterrows():
+            row_num = index + 2  # Excel is 1-indexed + header row
+
+            # --- Build image_sources ---
+            image_sources: List[Dict] = []
+            for meta in img_col_meta:
+                cell_ref = f"{meta['letter']}{row_num}"
+                source = None
+                col_name = meta["resolved"]
+                if col_name in row and pd.notna(row[col_name]):
+                    val = str(row[col_name]).strip()
+                    if val:
+                        source = val
+                image_sources.append({
+                    "image_source": source,
+                    "image_cell": cell_ref,
+                    "placeholder_name": meta["placeholder_name"]
+                })
+
+            # --- Build text_contents ---
+            text_contents: List[Dict] = []
+            for meta in txt_col_meta:
+                texts: List[Dict[str, str]] = []
+                for col_info in meta["columns"]:
+                    col_name = col_info["resolved"]
+                    if col_name in row and pd.notna(row[col_name]):
+                        text = str(row[col_name])
+                        if sanitize:
+                            text = sanitize_text(text)
+                        if text.strip():
+                            texts.append({
+                                "column": col_info["letter"],
+                                "text": text
+                            })
+                text_contents.append({
+                    "text_content": texts,
+                    "placeholder_name": meta["placeholder_name"]
+                })
+
+            # --- Legacy backward-compat fields from first elements ---
+            first_img = image_sources[0] if image_sources else {
+                "image_source": None, "image_cell": f"A{row_num}"
+            }
+            first_txt = text_contents[0] if text_contents else {
+                "text_content": []
+            }
+
+            slide_data = {
+                "row_index": index,
+                "image_sources": image_sources,
+                "text_contents": text_contents,
+                # Legacy fields
+                "image_source": first_img["image_source"],
+                "image_cell": first_img["image_cell"],
+                "text_content": first_txt["text_content"]
+            }
+            slides.append(slide_data)
+
+        logger.info(f"Extracted multi-element data for {len(slides)} slides")
         return slides
 
     def get_preview(

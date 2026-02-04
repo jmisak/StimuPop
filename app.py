@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 7.1.0
+Version: 8.0.0
 """
 
 import tempfile
@@ -50,6 +50,9 @@ from src import (
     IMG_ALIGN_BOTTOM,
     IMG_ALIGN_LEFT,
     IMG_ALIGN_RIGHT,
+    # NEW in v8.0 - Multi-element support
+    ImageElement,
+    TextGroup,
 )
 from src.logging_config import setup_logging, request_context, get_logger
 from src.excel_handler import parse_column_input
@@ -61,7 +64,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v7.1",
+    page_title="StimuPop v8.0",
     page_icon="🎯",
     layout="wide"
 )
@@ -76,7 +79,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v7.1")
+    st.title("🎯 StimuPop v8.0")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -96,7 +99,8 @@ def render_app():
      column_formats, paragraph_spacing, template_mode,
      image_placeholder_name, text_placeholder_name,
      img_v_align, img_h_align, column_positions,
-     text_overflow_mode) = render_advanced_settings(text_columns, font_size)
+     text_overflow_mode, multi_element_enabled, image_elements_config,
+     text_groups_config) = render_advanced_settings(text_columns, font_size)
 
     st.markdown("---")
 
@@ -131,7 +135,10 @@ def render_app():
         img_v_align=img_v_align,
         img_h_align=img_h_align,
         column_positions=column_positions,
-        text_overflow_mode=text_overflow_mode
+        text_overflow_mode=text_overflow_mode,
+        multi_element_enabled=multi_element_enabled,
+        image_elements_config=image_elements_config,
+        text_groups_config=text_groups_config
     )
 
     # Instructions
@@ -158,6 +165,35 @@ def render_file_uploaders():
     )
 
     return excel_file, template_file
+
+
+def get_template_shape_names(template_file) -> dict:
+    """Extract shape names from template for UI dropdowns."""
+    if not template_file:
+        return {"image_shapes": [], "text_shapes": [], "all_shapes": []}
+    try:
+        from pptx import Presentation
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
+        prs = Presentation(BytesIO(template_file.getvalue()))
+        if len(prs.slides) == 0:
+            return {"image_shapes": [], "text_shapes": [], "all_shapes": []}
+        slide = prs.slides[0]
+        all_shapes = []
+        image_shapes = []
+        text_shapes = []
+        for shape in slide.shapes:
+            all_shapes.append(shape.name)
+            if shape.has_text_frame:
+                text_shapes.append(shape.name)
+            # Shapes that could hold images (rectangles, pictures, placeholders)
+            if shape.shape_type in (MSO_SHAPE_TYPE.AUTO_SHAPE, MSO_SHAPE_TYPE.PICTURE,
+                                     MSO_SHAPE_TYPE.PLACEHOLDER):
+                image_shapes.append(shape.name)
+            elif not shape.has_text_frame:
+                image_shapes.append(shape.name)  # Non-text shapes could be image targets
+        return {"image_shapes": image_shapes, "text_shapes": text_shapes, "all_shapes": all_shapes}
+    except Exception:
+        return {"image_shapes": [], "text_shapes": [], "all_shapes": []}
 
 
 def render_basic_config():
@@ -200,6 +236,10 @@ def render_basic_config():
 def render_advanced_settings(text_columns_str: str, default_font_size: int):
     """Render advanced settings in an expander."""
     column_formats = None
+    # Multi-element defaults (always defined for safe return)
+    multi_element_enabled = False
+    image_elements_config = None
+    text_groups_config = None
 
     # Define size mode options with display labels
     size_mode_options = {
@@ -246,6 +286,90 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
                     "TextBox",
                     help="Name (or partial name) of the text box to populate"
                 )
+
+            # Multi-Element Mode (NEW in v8.0)
+            st.markdown("---")
+            multi_element_enabled = st.checkbox(
+                "Enable Multi-Element Mode (multiple images/text boxes per slide)",
+                value=False,
+                help="Map multiple Excel columns to multiple template shapes on the same slide"
+            )
+
+            if multi_element_enabled:
+                st.markdown("##### Image Elements")
+                st.caption("Each image element maps an Excel column to a template shape (use exact shape names from Template Preview)")
+
+                # Initialize/reset session state for element counts
+                if "num_image_elements" not in st.session_state:
+                    st.session_state.num_image_elements = 1
+                if "num_text_groups" not in st.session_state:
+                    st.session_state.num_text_groups = 1
+            else:
+                # Reset counters when multi-element is disabled
+                st.session_state.num_image_elements = 1
+                st.session_state.num_text_groups = 1
+
+            if multi_element_enabled:
+
+                col_add, col_remove = st.columns(2)
+                with col_add:
+                    if st.button("Add Image Element", key="add_img_elem"):
+                        st.session_state.num_image_elements += 1
+                        st.rerun()
+                with col_remove:
+                    if st.button("Remove Last", key="rm_img_elem") and st.session_state.num_image_elements > 1:
+                        st.session_state.num_image_elements -= 1
+                        st.rerun()
+
+                image_elements_config = []
+                for i in range(st.session_state.num_image_elements):
+                    ie_col1, ie_col2 = st.columns(2)
+                    with ie_col1:
+                        ie_column = st.text_input(
+                            f"Image Column #{i+1}", value="B", key=f"ie_col_{i}"
+                        )
+                    with ie_col2:
+                        ie_placeholder = st.text_input(
+                            f"Placeholder Name #{i+1}", value="Rectangle 1", key=f"ie_ph_{i}"
+                        )
+                    image_elements_config.append({
+                        "column": ie_column,
+                        "placeholder_name": ie_placeholder,
+                    })
+
+                st.markdown("##### Text Groups")
+                st.caption("Each text group maps one or more Excel columns to a template text box")
+
+                col_add2, col_remove2 = st.columns(2)
+                with col_add2:
+                    if st.button("Add Text Group", key="add_txt_grp"):
+                        st.session_state.num_text_groups += 1
+                        st.rerun()
+                with col_remove2:
+                    if st.button("Remove Last", key="rm_txt_grp") and st.session_state.num_text_groups > 1:
+                        st.session_state.num_text_groups -= 1
+                        st.rerun()
+
+                text_groups_config = []
+                for i in range(st.session_state.num_text_groups):
+                    tg_col1, tg_col2 = st.columns(2)
+                    with tg_col1:
+                        tg_columns = st.text_input(
+                            f"Text Columns #{i+1} (comma-separated)",
+                            value="C,D,E,F",
+                            key=f"tg_cols_{i}",
+                        )
+                    with tg_col2:
+                        tg_placeholder = st.text_input(
+                            f"Placeholder Name #{i+1}",
+                            value="TextBox",
+                            key=f"tg_ph_{i}",
+                        )
+                    text_groups_config.append({
+                        "columns": tg_columns,
+                        "placeholder_name": tg_placeholder,
+                    })
+
         else:
             st.info("📄 **Blank Mode**: Creates new blank slides with images and text positioned automatically.")
 
@@ -438,7 +562,8 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
             column_formats, paragraph_spacing, template_mode,
             image_placeholder_name, text_placeholder_name,
             img_v_align_value, img_h_align_value, column_positions,
-            text_overflow_mode)
+            text_overflow_mode, multi_element_enabled, image_elements_config,
+            text_groups_config)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -618,7 +743,10 @@ def render_generate_section(
     img_v_align,
     img_h_align,
     column_positions,
-    text_overflow_mode
+    text_overflow_mode,
+    multi_element_enabled=False,
+    image_elements_config=None,
+    text_groups_config=None,
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -655,7 +783,10 @@ def render_generate_section(
             img_v_align=img_v_align,
             img_h_align=img_h_align,
             column_positions=column_positions,
-            text_overflow_mode=text_overflow_mode
+            text_overflow_mode=text_overflow_mode,
+            multi_element_enabled=multi_element_enabled,
+            image_elements_config=image_elements_config,
+            text_groups_config=text_groups_config,
         )
 
 
@@ -680,25 +811,141 @@ def generate_presentation(
     img_v_align,
     img_h_align,
     column_positions,
-    text_overflow_mode
+    text_overflow_mode,
+    multi_element_enabled=False,
+    image_elements_config=None,
+    text_groups_config=None,
 ):
     """Generate the PowerPoint presentation."""
     logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
 
     try:
-        # Parse and validate columns
         processor = ExcelProcessor()
-        text_cols = parse_column_input(text_columns)
 
-        try:
-            resolved_img, resolved_text = processor.validate_columns(
-                df, img_column, text_cols
+        # Map text overflow mode to python-pptx constant
+        overflow_mode = "shrink" if text_overflow_mode == "Shrink text on overflow" else None
+
+        # Multi-element mode (v8.0)
+        is_multi = (template_mode == TEMPLATE_MODE_PLACEHOLDER
+                    and multi_element_enabled and image_elements_config)
+
+        if is_multi:
+            # Validate placeholder names are not empty
+            for ie_conf in image_elements_config:
+                if not ie_conf.get("placeholder_name", "").strip():
+                    st.error("❌ All image element placeholder names must be non-empty")
+                    return
+            if text_groups_config:
+                for tg_conf in text_groups_config:
+                    if not tg_conf.get("placeholder_name", "").strip():
+                        st.error("❌ All text group placeholder names must be non-empty")
+                        return
+
+            # Build ImageElement and TextGroup objects
+            image_elements = []
+            for ie_conf in image_elements_config:
+                image_elements.append(ImageElement(
+                    column=ie_conf["column"],
+                    placeholder_name=ie_conf["placeholder_name"].strip(),
+                    sizing_mode=img_size_mode,
+                ))
+
+            text_groups = []
+            if text_groups_config:
+                for tg_conf in text_groups_config:
+                    cols = parse_column_input(tg_conf["columns"])
+                    if cols:
+                        text_groups.append(TextGroup(
+                            columns=cols,
+                            placeholder_name=tg_conf["placeholder_name"].strip(),
+                        ))
+
+            # Validate multi-element columns
+            try:
+                resolved_images, resolved_texts = processor.validate_columns_multi(
+                    df, image_elements, text_groups
+                )
+            except ExcelValidationError as e:
+                st.error(f"❌ {e.message}")
+                if e.details:
+                    st.info(f"ℹ️ {e.details}")
+                return
+
+            # Extract multi-element slide data
+            slide_data = processor.get_slide_data_multi(
+                df, image_elements, text_groups
             )
-        except ExcelValidationError as e:
-            st.error(f"❌ {e.message}")
-            if e.details:
-                st.info(f"ℹ️ {e.details}")
-            return
+
+            # Build config with multi-element fields
+            config = SlideConfig(
+                img_column=image_elements[0].column,
+                text_columns=text_groups[0].columns if text_groups else [],
+                img_width=img_width,
+                img_height=img_height,
+                img_size_mode=img_size_mode,
+                font_size=font_size,
+                paragraph_spacing=paragraph_spacing,
+                template_mode=template_mode,
+                image_placeholder_name=image_elements[0].placeholder_name,
+                text_placeholder_name=text_groups[0].placeholder_name if text_groups else "TextBox",
+                text_overflow_mode=overflow_mode,
+                image_elements=image_elements,
+                text_groups=text_groups,
+            )
+        else:
+            # Legacy single-element path
+            text_cols = parse_column_input(text_columns)
+
+            try:
+                resolved_img, resolved_text = processor.validate_columns(
+                    df, img_column, text_cols
+                )
+            except ExcelValidationError as e:
+                st.error(f"❌ {e.message}")
+                if e.details:
+                    st.info(f"ℹ️ {e.details}")
+                return
+
+            # Extract slide data with column identity preserved
+            slide_data = processor.get_slide_data(df, resolved_img, resolved_text, preserve_column_identity=True)
+
+            # Create image alignment config (NEW in v6.0)
+            image_alignment = ImageAlignment(
+                vertical=img_v_align,
+                horizontal=img_h_align
+            )
+
+            # Create column positions config (NEW in v6.0)
+            col_positions = None
+            if column_positions:
+                col_positions = {}
+                for col, pos in column_positions.items():
+                    col_positions[col] = ColumnPosition(
+                        mode=pos.get("mode", "auto"),
+                        top=pos.get("top"),
+                        left=pos.get("left", 0.5)
+                    )
+
+            # Create slide configuration with per-column formats
+            config = SlideConfig(
+                img_column=resolved_img,
+                text_columns=resolved_text,
+                img_width=img_width,
+                img_height=img_height,
+                img_size_mode=img_size_mode,
+                img_top=img_top,
+                text_top=text_top,
+                font_size=font_size,
+                orientation=orientation,
+                column_formats=column_formats,
+                paragraph_spacing=paragraph_spacing,
+                template_mode=template_mode,
+                image_placeholder_name=image_placeholder_name,
+                text_placeholder_name=text_placeholder_name,
+                image_alignment=image_alignment,
+                column_positions=col_positions,
+                text_overflow_mode=overflow_mode,
+            )
 
         # Progress tracking
         progress_bar = st.progress(0)
@@ -711,51 +958,6 @@ def generate_presentation(
 
         if embedded_images:
             st.info(f"📷 Found {len(embedded_images)} embedded images in Excel")
-
-        # Extract slide data with column identity preserved
-        slide_data = processor.get_slide_data(df, resolved_img, resolved_text, preserve_column_identity=True)
-
-        # Create image alignment config (NEW in v6.0)
-        image_alignment = ImageAlignment(
-            vertical=img_v_align,
-            horizontal=img_h_align
-        )
-
-        # Create column positions config (NEW in v6.0)
-        col_positions = None
-        if column_positions:
-            col_positions = {}
-            for col, pos in column_positions.items():
-                col_positions[col] = ColumnPosition(
-                    mode=pos.get("mode", "auto"),
-                    top=pos.get("top"),
-                    left=pos.get("left", 0.5)
-                )
-
-        # Map text overflow mode to python-pptx constant
-        # "Resize shape to fit text" = None (default), "Shrink text on overflow" = "shrink"
-        overflow_mode = "shrink" if text_overflow_mode == "Shrink text on overflow" else None
-
-        # Create slide configuration with per-column formats
-        config = SlideConfig(
-            img_column=resolved_img,
-            text_columns=resolved_text,
-            img_width=img_width,
-            img_height=img_height,
-            img_size_mode=img_size_mode,
-            img_top=img_top,
-            text_top=text_top,
-            font_size=font_size,
-            orientation=orientation,
-            column_formats=column_formats,
-            paragraph_spacing=paragraph_spacing,
-            template_mode=template_mode,
-            image_placeholder_name=image_placeholder_name,
-            text_placeholder_name=text_placeholder_name,
-            image_alignment=image_alignment,
-            column_positions=col_positions,
-            text_overflow_mode=overflow_mode
-        )
 
         # Get template bytes if provided
         template_bytes = template_file.getvalue() if template_file else None
@@ -893,8 +1095,8 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v7.1.0 |"
-        "Image Alignment + Fixed Positioning | "
+        "🎯 StimuPop v8.0.0 |"
+        "Multi-Element Template Support | "
         "Built with Streamlit"
         "</p>",
         unsafe_allow_html=True

@@ -1,5 +1,33 @@
 # Version History
 
+## [2026-02-03] - v8.0.0: Multi-Element Template Support
+
+### Summary
+Major version release adding multi-element support for Template Mode. Users can now place multiple images and/or multiple text boxes on a single slide, each mapped to different Excel columns and template shapes. Fully backward compatible with all existing single-element workflows.
+
+### New Features
+- **Multi-Element Mode**: Enable in Template Mode to map multiple Excel columns to multiple template shapes
+- **ImageElement dataclass**: Configure per-image column, placeholder name, and sizing mode
+- **TextGroup dataclass**: Configure per-text-box column groups and placeholder name
+- **Dynamic shape matching**: Template extraction now builds dictionaries of all image and text shapes, matched by placeholder name
+- **Multi-element Excel processing**: New `validate_columns_multi()` and `get_slide_data_multi()` methods handle multiple image/text sources per row
+- **UI**: Add/remove image elements and text groups dynamically with session state counters
+
+### Backward Compatibility
+- All existing single-element workflows work identically to v7.1
+- SlideConfig uses Optional fields with helper methods (`get_image_elements()`, `get_text_groups()`) that bridge legacy and new modes
+- `_populate_slide_legacy()` preserves exact pre-v8.0 template slide creation logic
+
+### Files Modified
+- `src/pptx_generator.py` - ImageElement, TextGroup dataclasses; SlideConfig extensions; multi-element template extraction and slide creation
+- `src/excel_handler.py` - `validate_columns_multi()`, `get_slide_data_multi()`
+- `src/__init__.py` - Exports and version bump
+- `app.py` - Multi-element UI, version strings, generate_presentation branching
+- `config.yaml` - Version bump
+- `VERSION_HISTORY.md` - This changelog
+
+---
+
 ## [2026-02-03] - v7.1.0: Bug Fixes (Text Overflow, Excel Upload)
 
 ### Summary
