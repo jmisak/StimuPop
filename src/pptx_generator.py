@@ -564,6 +564,10 @@ class PPTXGenerator:
         tf = textbox.text_frame
         tf.word_wrap = True
 
+        # Apply text overflow mode (v7.1 fix - was missing in template path)
+        if self.config.text_overflow_mode == "shrink":
+            tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+
         template_paragraphs = shape_data['paragraphs']
 
         # Build content mapping: template paragraph -> data

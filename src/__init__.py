@@ -1,7 +1,12 @@
 """
-StimuPop - Source Package v7.0
+StimuPop - Source Package v7.1
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
+
+New in v7.1:
+- Fixed: Text overflow option now works in Template Mode
+- Fixed: Intermittent Excel upload error with retry logic
+- Browser warning workaround documented
 
 New in v7.0:
 - Dynamic Template Mode column mapping (fixes 5-column bug)
@@ -88,4 +93,4 @@ __all__ = [
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "7.0.0"
+__version__ = "7.1.0"

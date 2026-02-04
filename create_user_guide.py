@@ -183,7 +183,7 @@ def create_user_guide():
     set_cell_shading(version_cell, "E7F3FF")
     version_para = version_cell.paragraphs[0]
     version_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_run = version_para.add_run("Version 7.0.0")
+    version_run = version_para.add_run("Version 7.1.0")
     version_run.font.size = Pt(14)
     version_run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
 
@@ -704,6 +704,11 @@ def create_user_guide():
          "• Open Advanced Settings and set Size Mode to 'Fit to Box'\n"
          "• Adjust Max Width and Max Height to your desired dimensions\n"
          "• All images will now scale uniformly"),
+
+        ("Browser shows 'uncategorized website' warning on first launch",
+         "• This is a normal security warning from corporate firewalls/proxies\n"
+         "• Click 'Continue' or 'Proceed anyway' — the warning only appears once\n"
+         "• If it persists, try copy-pasting http://localhost:8501 directly into your browser's address bar"),
     ]
 
     for issue, solution in issues:
@@ -790,7 +795,7 @@ def create_user_guide():
 
     version_final = doc.add_paragraph()
     version_final.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    version_final.add_run("Version 7.0.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    version_final.add_run("Version 7.1.0").font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
     # Save document
     doc.save('StimuPop_User_Guide.docx')
@@ -804,7 +809,7 @@ def create_html_user_guide():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StimuPop User Guide - v7.0.0</title>
+    <title>StimuPop User Guide - v7.1.0</title>
     <style>
         :root {
             --primary-blue: #2E74B5;
@@ -877,7 +882,7 @@ def create_html_user_guide():
     <h1>StimuPop</h1>
     <p class="subtitle">Excel to PowerPoint Converter</p>
     <p style="font-size: 1.2em; color: var(--secondary-blue); font-weight: bold;">USER GUIDE</p>
-    <p class="version">Version 7.0.0</p>
+    <p class="version">Version 7.1.0</p>
 </div>
 
 <div class="toc">
@@ -1189,6 +1194,13 @@ def create_html_user_guide():
     <li>All images will now scale uniformly</li>
 </ul>
 
+<h3>Browser shows 'uncategorized website' warning on first launch</h3>
+<ul>
+    <li>This is a normal security warning from corporate firewalls/proxies</li>
+    <li>Click 'Continue' or 'Proceed anyway' — the warning only appears once</li>
+    <li>If it persists, try copy-pasting http://localhost:8501 directly into your browser's address bar</li>
+</ul>
+
 <h1 id="quick-reference">7. Quick Reference</h1>
 
 <h2>Column Reference Cheat Sheet</h2>
@@ -1219,7 +1231,7 @@ def create_html_user_guide():
 
 <div style="text-align: center; margin-top: 60px; padding: 40px;">
     <p style="font-size: 1.3em; color: var(--primary-blue); font-weight: bold;">Thank you for using StimuPop!</p>
-    <p style="color: var(--text-gray);">Version 7.0.0</p>
+    <p style="color: var(--text-gray);">Version 7.1.0</p>
 </div>
 
 </body>

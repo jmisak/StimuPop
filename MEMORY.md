@@ -3,7 +3,7 @@
 ## Project Overview
 Excel to PowerPoint Converter (StimuPop) - A Streamlit web application that converts Excel spreadsheet rows into PowerPoint presentation slides with images and formatted text. Features template-based generation, Rich Data image extraction, uniform image sizing, per-column text formatting, and portable distribution for easy sharing.
 
-**Current Version:** 7.0.0
+**Current Version:** 7.1.0
 
 ## Architecture Decisions
 
@@ -314,6 +314,22 @@ for idx, col in enumerate(user_columns):
 - More correct behavior overall, but edge cases may need review
 
 **Code Location**: `src/pptx_generator.py` lines 584-615
+
+### 19. Excel Upload Retry with Cache Clearing (v7.1.0)
+**Decision**: Add a single-retry pattern with Streamlit cache clearing for Excel file uploads.
+
+**Rationale**:
+- Users reported intermittent upload failures where the Excel file could not be read
+- Root cause: Streamlit's internal file cache occasionally serves a stale or incomplete buffer
+- A simple retry after clearing the cache resolves the issue without user intervention
+
+**Implementation**:
+- On initial `ExcelProcessor` read failure, call `st.cache_data.clear()` to invalidate cached file data
+- Retry the read operation exactly once
+- If the retry also fails, surface the original error to the user
+- Pattern is intentionally limited to one retry to avoid masking persistent file errors
+
+**Code Location**: `app.py` (Excel upload handler)
 
 ## Coding Conventions
 

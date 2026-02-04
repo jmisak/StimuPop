@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 7.0.0
+Version: 7.1.0
 """
 
 import tempfile
@@ -61,7 +61,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v7.0",
+    page_title="StimuPop v7.1",
     page_icon="🎯",
     layout="wide"
 )
@@ -76,7 +76,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v7.0")
+    st.title("🎯 StimuPop v7.1")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -505,6 +505,22 @@ def load_excel_preview(file_bytes: bytes, filename: str):
     return processor.read_excel(file_bytes, filename)
 
 
+def load_excel_with_retry(file_bytes: bytes, filename: str, max_retries: int = 2):
+    """Load Excel file with retry logic for intermittent failures."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            return load_excel_preview(file_bytes, filename)
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                # Clear cache and retry
+                load_excel_preview.clear()
+                logger.warning(f"Excel load attempt {attempt + 1} failed: {e}, retrying...")
+            else:
+                raise last_error
+
+
 def render_data_preview(excel_file):
     """Render Excel data preview."""
     if not excel_file:
@@ -513,7 +529,7 @@ def render_data_preview(excel_file):
     st.subheader("📋 Data Preview")
 
     try:
-        df = load_excel_preview(excel_file.getvalue(), excel_file.name)
+        df = load_excel_with_retry(excel_file.getvalue(), excel_file.name)
         processor = ExcelProcessor()
         summary = processor.get_summary(df)
 
@@ -877,7 +893,7 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v7.0.0 |"
+        "🎯 StimuPop v7.1.0 |"
         "Image Alignment + Fixed Positioning | "
         "Built with Streamlit"
         "</p>",

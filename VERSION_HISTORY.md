@@ -1,5 +1,25 @@
 # Version History
 
+## [2026-02-03] - v7.1.0: Bug Fixes (Text Overflow, Excel Upload)
+
+### Summary
+Patch release fixing two bugs and documenting a known browser warning related to corporate proxy/firewall environments.
+
+### Bug Fixes
+- **Shrink Text on Overflow in Template Mode**: The "Shrink text on overflow" setting (`MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE`) was only applied in Blank mode. It is now correctly applied in Template Mode as well.
+- **Intermittent Excel Upload Error**: Added retry logic with cache clearing to resolve sporadic failures when uploading Excel files. The upload handler now retries once after clearing the Streamlit file cache, preventing transient read errors.
+
+### Known Issue Documented
+- **Browser "Uncategorized Website" Warning**: Some users see a browser warning page when accessing the Streamlit localhost URL. This is caused by corporate proxy or firewall software (e.g., Zscaler, Palo Alto) categorizing the local address as an unknown site. This is not a StimuPop issue; users should allowlist `localhost` or `127.0.0.1` in their proxy configuration.
+
+### Files Modified
+- `src/pptx_generator.py` - Text overflow autofit applied in Template Mode path
+- `app.py` - Excel upload retry logic with cache clearing
+- `VERSION_HISTORY.md` - This changelog
+- `MEMORY.md` - Architecture decision #19
+
+---
+
 ## [2026-01-31] - v7.0.0: Template Mode Dynamic Column Mapping (Breaking Change)
 
 ### Summary
