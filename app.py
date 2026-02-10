@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 8.0.0
+Version: 8.1.0
 """
 
 import tempfile
@@ -64,7 +64,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v8.0",
+    page_title="StimuPop v8.1",
     page_icon="🎯",
     layout="wide"
 )
@@ -79,7 +79,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v8.0")
+    st.title("🎯 StimuPop v8.1")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -100,7 +100,8 @@ def render_app():
      image_placeholder_name, text_placeholder_name,
      img_v_align, img_h_align, column_positions,
      text_overflow_mode, multi_element_enabled, image_elements_config,
-     text_groups_config) = render_advanced_settings(text_columns, font_size)
+     text_groups_config, img_left, text_left,
+     text_alignment) = render_advanced_settings(text_columns, font_size, template_file)
 
     st.markdown("---")
 
@@ -138,7 +139,10 @@ def render_app():
         text_overflow_mode=text_overflow_mode,
         multi_element_enabled=multi_element_enabled,
         image_elements_config=image_elements_config,
-        text_groups_config=text_groups_config
+        text_groups_config=text_groups_config,
+        img_left=img_left,
+        text_left=text_left,
+        text_alignment=text_alignment,
     )
 
     # Instructions
@@ -192,7 +196,8 @@ def get_template_shape_names(template_file) -> dict:
             elif not shape.has_text_frame:
                 image_shapes.append(shape.name)  # Non-text shapes could be image targets
         return {"image_shapes": image_shapes, "text_shapes": text_shapes, "all_shapes": all_shapes}
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Could not extract template shape names: {e}")
         return {"image_shapes": [], "text_shapes": [], "all_shapes": []}
 
 
@@ -233,7 +238,7 @@ def render_basic_config():
     return img_column, text_columns, font_size, pictures_only
 
 
-def render_advanced_settings(text_columns_str: str, default_font_size: int):
+def render_advanced_settings(text_columns_str: str, default_font_size: int, template_file=None):
     """Render advanced settings in an expander."""
     column_formats = None
     # Multi-element defaults (always defined for safe return)
@@ -273,19 +278,47 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
         if template_mode == TEMPLATE_MODE_PLACEHOLDER:
             st.info("📋 **Template Mode**: Upload a template with placeholder shapes. The first slide will be used as the template.")
 
+            # Get shape names from uploaded template for dropdown population
+            shape_names = get_template_shape_names(template_file) if template_file else {
+                "image_shapes": [], "text_shapes": [], "all_shapes": []
+            }
+
             placeholder_col1, placeholder_col2 = st.columns(2)
             with placeholder_col1:
-                image_placeholder_name = st.text_input(
-                    "Image Placeholder Name",
-                    "Rectangle 1",
-                    help="Name of the shape where images should be placed"
-                )
+                if shape_names["image_shapes"]:
+                    # Default to first shape, or "Rectangle 1" if present
+                    img_default_idx = 0
+                    if "Rectangle 1" in shape_names["image_shapes"]:
+                        img_default_idx = shape_names["image_shapes"].index("Rectangle 1")
+                    image_placeholder_name = st.selectbox(
+                        "Image Placeholder Name",
+                        options=shape_names["image_shapes"],
+                        index=img_default_idx,
+                        help="Select the template shape where images should be placed"
+                    )
+                else:
+                    image_placeholder_name = st.text_input(
+                        "Image Placeholder Name",
+                        "Rectangle 1",
+                        help="Name of the shape where images should be placed (upload template to see dropdown)"
+                    )
             with placeholder_col2:
-                text_placeholder_name = st.text_input(
-                    "Text Placeholder Name",
-                    "TextBox",
-                    help="Name (or partial name) of the text box to populate"
-                )
+                if shape_names["text_shapes"]:
+                    txt_default_idx = 0
+                    if "TextBox" in shape_names["text_shapes"]:
+                        txt_default_idx = shape_names["text_shapes"].index("TextBox")
+                    text_placeholder_name = st.selectbox(
+                        "Text Placeholder Name",
+                        options=shape_names["text_shapes"],
+                        index=txt_default_idx,
+                        help="Select the template text box to populate with data"
+                    )
+                else:
+                    text_placeholder_name = st.text_input(
+                        "Text Placeholder Name",
+                        "TextBox",
+                        help="Name (or partial name) of the text box to populate (upload template to see dropdown)"
+                    )
 
             # Multi-Element Mode (NEW in v8.0)
             st.markdown("---")
@@ -443,7 +476,10 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
         # Layout Position - only shown in Blank mode (values ignored in Template mode)
         # Default values (used when Template mode selected)
         img_top = 0.5
+        img_left = 0.5
         text_top = 5.0
+        text_left = 0.5
+        text_alignment = "center"
         orientation = "portrait"
 
         if template_mode == TEMPLATE_MODE_BLANK:
@@ -459,6 +495,15 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
                     value=0.5,
                     step=0.25,
                     help="Distance from top of slide to image"
+                )
+
+                img_left = st.slider(
+                    "Image Left Margin (inches)",
+                    min_value=0.0,
+                    max_value=5.0,
+                    value=0.5,
+                    step=0.25,
+                    help="Distance from left edge of slide to image area (used with Left/Right alignment)"
                 )
 
             with adv_col2:
@@ -477,6 +522,27 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
                     index=0,
                     help="Portrait (tall) or Landscape (wide) slides"
                 )
+
+            # Text positioning controls (Blank mode)
+            st.markdown("##### Text Box Controls")
+            txt_ctrl_col1, txt_ctrl_col2 = st.columns(2)
+            with txt_ctrl_col1:
+                text_left = st.slider(
+                    "Text Left Margin (inches)",
+                    min_value=0.0,
+                    max_value=5.0,
+                    value=0.5,
+                    step=0.25,
+                    help="Distance from left edge of slide to text area"
+                )
+            with txt_ctrl_col2:
+                text_align_label = st.selectbox(
+                    "Text Alignment",
+                    options=["Center", "Left", "Right"],
+                    index=0,
+                    help="Horizontal text alignment within text boxes"
+                )
+                text_alignment = text_align_label.lower()
 
         # Image Alignment (NEW in v6.0)
         st.markdown("---")
@@ -563,7 +629,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int):
             image_placeholder_name, text_placeholder_name,
             img_v_align_value, img_h_align_value, column_positions,
             text_overflow_mode, multi_element_enabled, image_elements_config,
-            text_groups_config)
+            text_groups_config, img_left, text_left, text_alignment)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -747,6 +813,9 @@ def render_generate_section(
     multi_element_enabled=False,
     image_elements_config=None,
     text_groups_config=None,
+    img_left=0.5,
+    text_left=0.5,
+    text_alignment="center",
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -787,6 +856,9 @@ def render_generate_section(
             multi_element_enabled=multi_element_enabled,
             image_elements_config=image_elements_config,
             text_groups_config=text_groups_config,
+            img_left=img_left,
+            text_left=text_left,
+            text_alignment=text_alignment,
         )
 
 
@@ -815,6 +887,9 @@ def generate_presentation(
     multi_element_enabled=False,
     image_elements_config=None,
     text_groups_config=None,
+    img_left=0.5,
+    text_left=0.5,
+    text_alignment="center",
 ):
     """Generate the PowerPoint presentation."""
     logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
@@ -934,6 +1009,7 @@ def generate_presentation(
                 img_height=img_height,
                 img_size_mode=img_size_mode,
                 img_top=img_top,
+                img_left=img_left,
                 text_top=text_top,
                 font_size=font_size,
                 orientation=orientation,
@@ -945,6 +1021,8 @@ def generate_presentation(
                 image_alignment=image_alignment,
                 column_positions=col_positions,
                 text_overflow_mode=overflow_mode,
+                text_left=text_left,
+                text_alignment=text_alignment,
             )
 
         # Progress tracking
@@ -1095,8 +1173,8 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v8.0.0 |"
-        "Multi-Element Template Support | "
+        "🎯 StimuPop v8.1.0 |"
+        "Image/Text Alignment Fixes | "
         "Built with Streamlit"
         "</p>",
         unsafe_allow_html=True

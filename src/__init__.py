@@ -1,7 +1,13 @@
 """
-StimuPop - Source Package v8.0
+StimuPop - Source Package v8.1
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
+
+New in v8.1:
+- Fix: Template mode image placeholder now uses dropdown populated from actual shapes
+- Fix: Image horizontal alignment (left/right) now works correctly in Blank mode
+- New: Configurable text alignment (left/center/right) and text left margin for Blank mode
+- Safety guards for extreme positioning values
 
 New in v8.0:
 - Multi-element support: multiple images and text boxes per slide (Template Mode)
@@ -103,4 +109,4 @@ __all__ = [
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "8.0.0"
+__version__ = "8.1.0"

@@ -1,5 +1,5 @@
 """
-PowerPoint generation for StimuPop v8.0.
+PowerPoint generation for StimuPop v8.1.
 
 Provides presentation creation with:
 - Template-based generation
@@ -181,8 +181,13 @@ class SlideConfig:
     image_alignment: Optional[ImageAlignment] = None  # None = center (legacy behavior)
     column_positions: Optional[Dict[str, ColumnPosition]] = None  # None = auto flow all
     positioning_mode: str = "simple"  # simple | advanced
+    # NEW in v8.1 - Blank mode image left margin
+    img_left: float = 0.5  # Left margin for image bounding box in inches (blank mode)
     # NEW in v6.2 - Text overflow handling
     text_overflow_mode: Optional[str] = None  # None = resize shape, "shrink" = shrink text
+    # NEW in v8.1 - Text alignment and left margin (Blank mode)
+    text_alignment: str = "center"  # "left" | "center" | "right"
+    text_left: float = 0.5  # Left margin for text boxes in inches (blank mode)
     # NEW in v8.0 - Multi-element support
     image_elements: Optional[List['ImageElement']] = None
     text_groups: Optional[List['TextGroup']] = None
@@ -198,6 +203,11 @@ class SlideConfig:
         if self.image_alignment is not None:
             return self.image_alignment
         return ImageAlignment()  # Default: center/center
+
+    def get_text_pp_align(self) -> PP_ALIGN:
+        """Get PowerPoint paragraph alignment from text_alignment config."""
+        align_map = {"left": PP_ALIGN.LEFT, "center": PP_ALIGN.CENTER, "right": PP_ALIGN.RIGHT}
+        return align_map.get(self.text_alignment, PP_ALIGN.CENTER)
 
     def get_column_position(self, column: str) -> Optional[ColumnPosition]:
         """Get position config for column, or None if auto."""
@@ -1092,9 +1102,14 @@ class PPTXGenerator:
         # Get alignment settings
         alignment = self.config.get_image_alignment()
 
-        # Calculate bounding box - centered horizontally on slide by default
+        # Calculate bounding box based on horizontal alignment
         slide_width_inches = prs.slide_width.inches
-        box_left = (slide_width_inches - self.config.img_width) / 2
+        if alignment.horizontal == IMG_ALIGN_LEFT:
+            box_left = self.config.img_left
+        elif alignment.horizontal == IMG_ALIGN_RIGHT:
+            box_left = max(0, slide_width_inches - self.config.img_width - self.config.img_left)
+        else:  # center (legacy default)
+            box_left = (slide_width_inches - self.config.img_width) / 2
         box_top = self.config.img_top
         box_width = self.config.img_width
         box_height = self.config.img_height
@@ -1157,11 +1172,12 @@ class PPTXGenerator:
     ) -> None:
         """Add text items in auto-flow mode (single textbox, sequential paragraphs)."""
         text_height = prs.slide_height.inches - self.config.text_top - 0.5
+        text_width = max(1.0, prs.slide_width.inches - self.config.text_left - 0.5)
 
         textbox = slide.shapes.add_textbox(
-            Inches(0.5),
+            Inches(self.config.text_left),
             Inches(self.config.text_top),
-            Inches(prs.slide_width.inches - 1.0),
+            Inches(text_width),
             Inches(text_height)
         )
 
@@ -1195,7 +1211,7 @@ class PPTXGenerator:
             font.name = col_format.font_name
             font.color.rgb = col_format.get_rgb_color()
 
-            p.alignment = PP_ALIGN.CENTER
+            p.alignment = self.config.get_text_pp_align()
             p.space_after = Pt(self.config.paragraph_spacing)
 
     def _add_text_fixed(
@@ -1241,7 +1257,7 @@ class PPTXGenerator:
         font.name = col_format.font_name
         font.color.rgb = col_format.get_rgb_color()
 
-        p.alignment = PP_ALIGN.CENTER
+        p.alignment = self.config.get_text_pp_align()
         p.space_after = Pt(self.config.paragraph_spacing)
 
 
