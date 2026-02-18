@@ -223,7 +223,8 @@ class ExcelProcessor:
         img_column: str,
         text_columns: List[str],
         sanitize: bool = True,
-        preserve_column_identity: bool = True
+        preserve_column_identity: bool = True,
+        text_separator: str = "",
     ) -> List[dict]:
         """
         Extract and optionally sanitize slide data from DataFrame.
@@ -235,6 +236,8 @@ class ExcelProcessor:
             sanitize: Whether to sanitize text content
             preserve_column_identity: If True, text_content contains dicts with
                 column info; if False, contains plain strings (backward compat)
+            text_separator: If non-empty, join all text columns into a single entry
+                using this string as separator (e.g., " for ").
 
         Returns:
             List of dicts with 'image_source', 'image_cell', and 'text_content' keys.
@@ -287,6 +290,15 @@ class ExcelProcessor:
                             })
                         else:
                             slide_data["text_content"].append(text)
+
+            # Join text columns with separator if specified
+            if text_separator and len(slide_data["text_content"]) > 1:
+                items = slide_data["text_content"]
+                if preserve_column_identity and all(isinstance(it, dict) for it in items):
+                    combined = text_separator.join([it["text"] for it in items])
+                    slide_data["text_content"] = [{"column": items[0]["column"], "text": combined}]
+                elif not preserve_column_identity and all(isinstance(it, str) for it in items):
+                    slide_data["text_content"] = [text_separator.join(items)]
 
             slides.append(slide_data)
 
@@ -417,7 +429,8 @@ class ExcelProcessor:
                     group_cols.append({"resolved": resolved, "letter": letter})
             txt_col_meta.append({
                 "columns": group_cols,
-                "placeholder_name": group.placeholder_name
+                "placeholder_name": group.placeholder_name,
+                "separator": getattr(group, 'separator', ''),
             })
 
         slides: List[dict] = []
@@ -456,6 +469,12 @@ class ExcelProcessor:
                                 "column": col_info["letter"],
                                 "text": text
                             })
+                # If separator is set, join all column texts into a single entry
+                separator = meta.get("separator", "")
+                if separator and len(texts) > 1:
+                    combined = separator.join([t["text"] for t in texts])
+                    texts = [{"column": texts[0]["column"], "text": combined}]
+
                 text_contents.append({
                     "text_content": texts,
                     "placeholder_name": meta["placeholder_name"]

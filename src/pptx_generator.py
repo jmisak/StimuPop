@@ -1,5 +1,5 @@
 """
-PowerPoint generation for StimuPop v8.1.
+PowerPoint generation for StimuPop v8.2.
 
 Provides presentation creation with:
 - Template-based generation
@@ -134,9 +134,12 @@ class TextGroup:
     Attributes:
         columns: Excel column letters to populate this text box (e.g., ["C", "D"])
         placeholder_name: Template shape name to populate (e.g., "TextBox 5")
+        separator: If non-empty, join all column values on one line with this separator
+                   (e.g., " for " produces "$X.XX for 0.5 fl oz"). Empty = separate lines.
     """
     columns: List[str]
     placeholder_name: str
+    separator: str = ""
 
 
 @dataclass
@@ -188,6 +191,8 @@ class SlideConfig:
     # NEW in v8.1 - Text alignment and left margin (Blank mode)
     text_alignment: str = "center"  # "left" | "center" | "right"
     text_left: float = 0.5  # Left margin for text boxes in inches (blank mode)
+    # NEW in v8.2 - Text separator for single-element (legacy) path
+    text_separator: str = ""  # If non-empty, join text columns on one line with this separator
     # NEW in v8.0 - Multi-element support
     image_elements: Optional[List['ImageElement']] = None
     text_groups: Optional[List['TextGroup']] = None
@@ -473,8 +478,13 @@ class PPTXGenerator:
                 'paragraphs': []
             }
 
-            # Extract text frame info
+            # Extract text frame info including margins and vertical anchor
             if shape.has_text_frame:
+                shape_data['margin_top'] = shape.text_frame.margin_top
+                shape_data['margin_bottom'] = shape.text_frame.margin_bottom
+                shape_data['margin_left'] = shape.text_frame.margin_left
+                shape_data['margin_right'] = shape.text_frame.margin_right
+                shape_data['vertical_anchor'] = shape.text_frame.vertical_anchor
                 for para in shape.text_frame.paragraphs:
                     para_data = {
                         'text': para.text,
@@ -818,6 +828,18 @@ class PPTXGenerator:
         tf = textbox.text_frame
         tf.word_wrap = True
 
+        # Preserve template text frame margins and vertical alignment (v8.2 fix)
+        if shape_data.get('margin_top') is not None:
+            tf.margin_top = shape_data['margin_top']
+        if shape_data.get('margin_bottom') is not None:
+            tf.margin_bottom = shape_data['margin_bottom']
+        if shape_data.get('margin_left') is not None:
+            tf.margin_left = shape_data['margin_left']
+        if shape_data.get('margin_right') is not None:
+            tf.margin_right = shape_data['margin_right']
+        if shape_data.get('vertical_anchor') is not None:
+            tf.vertical_anchor = shape_data['vertical_anchor']
+
         # Apply text overflow mode (v7.1 fix - was missing in template path)
         if self.config.text_overflow_mode == "shrink":
             tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
@@ -932,6 +954,18 @@ class PPTXGenerator:
 
             tf = textbox.text_frame
             tf.word_wrap = True
+
+            # Preserve template text frame margins and vertical alignment
+            if shape_data.get('margin_top') is not None:
+                tf.margin_top = shape_data['margin_top']
+            if shape_data.get('margin_bottom') is not None:
+                tf.margin_bottom = shape_data['margin_bottom']
+            if shape_data.get('margin_left') is not None:
+                tf.margin_left = shape_data['margin_left']
+            if shape_data.get('margin_right') is not None:
+                tf.margin_right = shape_data['margin_right']
+            if shape_data.get('vertical_anchor') is not None:
+                tf.vertical_anchor = shape_data['vertical_anchor']
 
             for i, para_data in enumerate(shape_data['paragraphs']):
                 if i == 0:

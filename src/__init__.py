@@ -1,5 +1,5 @@
 """
-StimuPop - Source Package v8.1
+StimuPop - Source Package v8.2
 
 Production-grade modules for Excel to PPTX conversion with embedded images.
 
@@ -109,4 +109,4 @@ __all__ = [
     "TEMPLATE_MODE_PLACEHOLDER",
 ]
 
-__version__ = "8.1.0"
+__version__ = "8.2.0"

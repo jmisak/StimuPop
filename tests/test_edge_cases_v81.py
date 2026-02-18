@@ -516,6 +516,7 @@ class TestFunctionSignatureConsistency:
             #            image_placeholder_name, text_placeholder_name,
             #            img_v_align, img_h_align, column_positions,
             #            text_overflow_mode, multi_element_enabled, image_elements_config,
-            #            text_groups_config, img_left, text_left, text_alignment)
-            # That's 21 items (verified from app.py line 98-104)
-            assert len(result) == 21, f"Expected 21 return values, got {len(result)}"
+            #            text_groups_config, img_left, text_left, text_alignment,
+            #            text_separator)
+            # That's 22 items (v8.2: added text_separator)
+            assert len(result) == 22, f"Expected 22 return values, got {len(result)}"

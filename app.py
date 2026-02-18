@@ -16,7 +16,7 @@ Features:
 - Progress tracking
 - Comprehensive error handling
 
-Version: 8.1.0
+Version: 8.2.0
 """
 
 import tempfile
@@ -64,7 +64,7 @@ logger = get_logger(__name__)
 
 # Page configuration
 st.set_page_config(
-    page_title="StimuPop v8.1",
+    page_title="StimuPop v8.2",
     page_icon="🎯",
     layout="wide"
 )
@@ -79,7 +79,7 @@ def main():
 
 def render_app():
     """Render the main application UI."""
-    st.title("🎯 StimuPop v8.1")
+    st.title("🎯 StimuPop v8.2")
     st.markdown("*Excel to PowerPoint with template support*")
     st.markdown("---")
 
@@ -101,7 +101,7 @@ def render_app():
      img_v_align, img_h_align, column_positions,
      text_overflow_mode, multi_element_enabled, image_elements_config,
      text_groups_config, img_left, text_left,
-     text_alignment) = render_advanced_settings(text_columns, font_size, template_file)
+     text_alignment, text_separator) = render_advanced_settings(text_columns, font_size, template_file)
 
     st.markdown("---")
 
@@ -143,6 +143,7 @@ def render_app():
         img_left=img_left,
         text_left=text_left,
         text_alignment=text_alignment,
+        text_separator=text_separator,
     )
 
     # Instructions
@@ -274,6 +275,7 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int, temp
         # Placeholder names (only shown for template mode)
         image_placeholder_name = "Rectangle 1"
         text_placeholder_name = "TextBox"
+        text_separator = ""
 
         if template_mode == TEMPLATE_MODE_PLACEHOLDER:
             st.info("📋 **Template Mode**: Upload a template with placeholder shapes. The first slide will be used as the template.")
@@ -320,6 +322,14 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int, temp
                         help="Name (or partial name) of the text box to populate (upload template to see dropdown)"
                     )
 
+            # Text separator for single-element mode (NEW in v8.2)
+            text_separator = st.text_input(
+                "Text Column Separator (leave empty for separate lines)",
+                value="",
+                key="text_separator_single",
+                help="Join all text columns on one line with this text (e.g., ' for ' to get '$X.XX for 0.5 fl oz')"
+            )
+
             # Multi-Element Mode (NEW in v8.0)
             st.markdown("---")
             multi_element_enabled = st.checkbox(
@@ -362,9 +372,21 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int, temp
                             f"Image Column #{i+1}", value="B", key=f"ie_col_{i}"
                         )
                     with ie_col2:
-                        ie_placeholder = st.text_input(
-                            f"Placeholder Name #{i+1}", value="Rectangle 1", key=f"ie_ph_{i}"
-                        )
+                        if shape_names["image_shapes"]:
+                            ie_default_idx = 0
+                            if "Rectangle 1" in shape_names["image_shapes"]:
+                                ie_default_idx = shape_names["image_shapes"].index("Rectangle 1")
+                            ie_placeholder = st.selectbox(
+                                f"Placeholder Name #{i+1}",
+                                options=shape_names["image_shapes"],
+                                index=min(ie_default_idx, len(shape_names["image_shapes"]) - 1),
+                                key=f"ie_ph_{i}",
+                                help="Select the template shape for this image element"
+                            )
+                        else:
+                            ie_placeholder = st.text_input(
+                                f"Placeholder Name #{i+1}", value="Rectangle 1", key=f"ie_ph_{i}"
+                            )
                     image_elements_config.append({
                         "column": ie_column,
                         "placeholder_name": ie_placeholder,
@@ -393,14 +415,33 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int, temp
                             key=f"tg_cols_{i}",
                         )
                     with tg_col2:
-                        tg_placeholder = st.text_input(
-                            f"Placeholder Name #{i+1}",
-                            value="TextBox",
-                            key=f"tg_ph_{i}",
-                        )
+                        if shape_names["text_shapes"]:
+                            tg_default_idx = 0
+                            if "TextBox" in shape_names["text_shapes"]:
+                                tg_default_idx = shape_names["text_shapes"].index("TextBox")
+                            tg_placeholder = st.selectbox(
+                                f"Placeholder Name #{i+1}",
+                                options=shape_names["text_shapes"],
+                                index=min(tg_default_idx, len(shape_names["text_shapes"]) - 1),
+                                key=f"tg_ph_{i}",
+                                help="Select the template text box for this text group"
+                            )
+                        else:
+                            tg_placeholder = st.text_input(
+                                f"Placeholder Name #{i+1}",
+                                value="TextBox",
+                                key=f"tg_ph_{i}",
+                            )
+                    tg_separator = st.text_input(
+                        f"Separator #{i+1} (leave empty for separate lines)",
+                        value="",
+                        key=f"tg_sep_{i}",
+                        help="Join columns on one line with this text (e.g., ' for ' to get '$X.XX for 0.5 fl oz')"
+                    )
                     text_groups_config.append({
                         "columns": tg_columns,
                         "placeholder_name": tg_placeholder,
+                        "separator": tg_separator,
                     })
 
         else:
@@ -629,7 +670,8 @@ def render_advanced_settings(text_columns_str: str, default_font_size: int, temp
             image_placeholder_name, text_placeholder_name,
             img_v_align_value, img_h_align_value, column_positions,
             text_overflow_mode, multi_element_enabled, image_elements_config,
-            text_groups_config, img_left, text_left, text_alignment)
+            text_groups_config, img_left, text_left, text_alignment,
+            text_separator)
 
 
 def render_column_format_config(text_columns_str: str, default_font_size: int) -> dict:
@@ -816,6 +858,7 @@ def render_generate_section(
     img_left=0.5,
     text_left=0.5,
     text_alignment="center",
+    text_separator="",
 ):
     """Render the generate button and handle generation."""
     if st.button("🎨 Generate Presentation", type="primary", use_container_width=True):
@@ -859,6 +902,7 @@ def render_generate_section(
             img_left=img_left,
             text_left=text_left,
             text_alignment=text_alignment,
+            text_separator=text_separator,
         )
 
 
@@ -890,6 +934,7 @@ def generate_presentation(
     img_left=0.5,
     text_left=0.5,
     text_alignment="center",
+    text_separator="",
 ):
     """Generate the PowerPoint presentation."""
     logger.info(f"Starting presentation generation for {excel_file.name} (mode: {template_mode})")
@@ -933,6 +978,7 @@ def generate_presentation(
                         text_groups.append(TextGroup(
                             columns=cols,
                             placeholder_name=tg_conf["placeholder_name"].strip(),
+                            separator=tg_conf.get("separator", ""),
                         ))
 
             # Validate multi-element columns
@@ -982,7 +1028,11 @@ def generate_presentation(
                 return
 
             # Extract slide data with column identity preserved
-            slide_data = processor.get_slide_data(df, resolved_img, resolved_text, preserve_column_identity=True)
+            slide_data = processor.get_slide_data(
+                df, resolved_img, resolved_text,
+                preserve_column_identity=True,
+                text_separator=text_separator,
+            )
 
             # Create image alignment config (NEW in v6.0)
             image_alignment = ImageAlignment(
@@ -1023,6 +1073,7 @@ def generate_presentation(
                 text_overflow_mode=overflow_mode,
                 text_left=text_left,
                 text_alignment=text_alignment,
+                text_separator=text_separator,
             )
 
         # Progress tracking
@@ -1173,8 +1224,8 @@ def render_footer():
     st.markdown("---")
     st.markdown(
         "<p style='text-align: center; color: gray;'>"
-        "🎯 StimuPop v8.1.0 |"
-        "Image/Text Alignment Fixes | "
+        "🎯 StimuPop v8.2.0 |"
+        "Template Fidelity + Column Separator | "
         "Built with Streamlit"
         "</p>",
         unsafe_allow_html=True
